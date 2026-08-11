@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trippone">
+<meta name="theme-color" content="#171a30">
+<title>Trippone</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<style>
+:root{
+  --sand:#f3ead9; --cream:#faf6ec; --ink:#2c2015; --terra:#c05a2b;
+  --majorelle:#4a52c9; --palm:#3e6b4f; --night:#171a30; --gold:#d9a441;
+  --carta:#ffffff; --bordo:rgba(44,32,21,.12); --muto:rgba(44,32,21,.55);
+  --serif:ui-serif, Georgia, "Times New Roman", serif;
+  --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --sand:#171a30; --cream:#10122a; --ink:#efe7d8; --carta:#232649;
+    --bordo:rgba(239,231,216,.14); --muto:rgba(239,231,216,.55);
+    --terra:#e07a48; --gold:#e2b45e; --palm:#6da583;
+  }
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  font-family:var(--sans); background:var(--sand); color:var(--ink);
+  min-height:100vh; padding-bottom:env(safe-area-inset-bottom);
+  -webkit-font-smoothing:antialiased; overscroll-behavior-y:none;
+}
+.schermo{display:none; min-height:100vh}
+.schermo.attivo{display:block}
+.eyebrow{font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--terra); font-weight:700}
+h1,h2,.display{font-family:var(--serif)}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
+a{color:var(--majorelle)}
+
+/* ---------- sblocco ---------- */
+#sblocco{display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; padding:32px; background:var(--night); color:#efe7d8; text-align:center}
+#sblocco .logo{font-family:var(--serif); font-size:3rem; color:#e2b45e; margin-bottom:4px}
+#sblocco .sotto{opacity:.7; margin-bottom:40px; font-size:.95rem}
+#sblocco input{
+  width:100%; max-width:340px; padding:16px; font-size:1.1rem; text-align:center;
+  border-radius:14px; border:1px solid rgba(239,231,216,.25);
+  background:rgba(239,231,216,.08); color:#efe7d8; outline:none;
+}
+#sblocco input:focus{border-color:#e2b45e}
+#sblocco .entra{
+  margin-top:16px; width:100%; max-width:340px; padding:16px; border-radius:14px;
+  background:#c05a2b; color:#fff; font-size:1.05rem; font-weight:600;
+}
+#sblocco .errore{color:#ff9f7a; margin-top:14px; min-height:1.4em; font-size:.92rem}
+#sblocco .stato{opacity:.5; margin-top:26px; font-size:.8rem}
+
+/* ---------- home ---------- */
+.testata{
+  padding:calc(env(safe-area-inset-top) + 18px) 20px 18px;
+  background:var(--night); color:#efe7d8;
+}
+.testata .logo{font-family:var(--serif); font-size:1.6rem; color:#e2b45e}
+.contenuto{padding:20px; max-width:640px; margin:0 auto}
+.countdown{
+  background:linear-gradient(135deg, var(--terra), #a34620); color:#fff;
+  border-radius:20px; padding:24px; margin-bottom:20px;
+}
+.countdown .grande{font-family:var(--serif); font-size:2.6rem; line-height:1.1}
+.countdown .picc{opacity:.85; margin-top:6px; font-size:.95rem}
+.card-viaggio{
+  display:block; width:100%; text-align:left; background:var(--carta);
+  border:1px solid var(--bordo); border-radius:20px; padding:20px; margin-bottom:14px;
+}
+.card-viaggio h2{font-size:1.5rem}
+.card-viaggio .date{color:var(--muto); margin-top:4px; font-size:.92rem}
+.card-viaggio .sub{color:var(--terra); font-family:var(--serif); font-style:italic}
+h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muto)}
+.footerino{margin-top:36px; text-align:center; color:var(--muto); font-size:.8rem}
+.footerino button{color:var(--majorelle); font-size:.8rem; padding:8px}
+
+/* ---------- viaggio ---------- */
+.testata-v{
+  position:sticky; top:0; z-index:600; background:var(--night); color:#efe7d8;
+  padding:calc(env(safe-area-inset-top) + 10px) 12px 0;
+}
+.testata-v .riga{display:flex; align-items:center; gap:8px}
+.testata-v .indietro{padding:10px; display:flex; color:#e2b45e}
+.testata-v h1{font-size:1.25rem; flex:1}
+.tabs{display:flex; overflow-x:auto; gap:4px; padding:10px 4px 0; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:10px 14px 12px;
+  color:rgba(239,231,216,.65); font-size:.9rem; font-weight:600;
+  border-bottom:3px solid transparent; white-space:nowrap;
+}
+.tab.attivo{color:#e2b45e; border-bottom-color:#c05a2b}
+.tab svg{width:17px;height:17px}
+.pannello{display:none; padding:18px 16px 60px; max-width:640px; margin:0 auto}
+.pannello.attivo{display:block}
+
+/* itinerario */
+.giorno{background:var(--carta); border:1px solid var(--bordo); border-radius:16px; margin-bottom:10px; overflow:hidden}
+.giorno summary{list-style:none; display:flex; gap:12px; align-items:center; padding:14px 16px; cursor:pointer}
+.giorno summary::-webkit-details-marker{display:none}
+.giorno .dnum{
+  flex:0 0 auto; width:44px; height:44px; border-radius:12px; background:var(--sand);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1;
+}
+.giorno.oggi .dnum{background:var(--terra); color:#fff}
+.giorno .dnum b{font-size:1.15rem}
+.giorno .dnum span{font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; margin-top:2px}
+.giorno .dtit{flex:1; min-width:0}
+.giorno .dtit b{display:block; font-size:.98rem}
+.giorno .dtit small{color:var(--muto)}
+.giorno .freccia{transition:transform .2s; color:var(--muto)}
+.giorno[open] .freccia{transform:rotate(180deg)}
+.giorno .corpo{padding:0 16px 16px; font-size:.95rem; line-height:1.55}
+.giorno .corpo p{margin-bottom:10px}
+.etichetta{font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--terra); font-weight:700; margin:12px 0 6px}
+.giorno ul{padding-left:18px; margin-bottom:10px}
+.giorno li{margin-bottom:4px}
+.bott{
+  display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px;
+  background:var(--majorelle); color:#fff; font-weight:600; font-size:.9rem; text-decoration:none;
+}
+.bott.secondario{background:var(--sand); color:var(--ink); border:1px solid var(--bordo)}
+.bott svg{width:17px; height:17px; flex:0 0 auto}
+.notte-chip{display:inline-flex; align-items:center; gap:6px; background:var(--sand);
+  border-radius:99px; padding:5px 12px; font-size:.82rem; margin-top:8px}
+.notte-chip svg{width:13px;height:13px; color:var(--gold)}
+
+/* mappa */
+#mappa-vera{height:62vh; border-radius:16px; border:1px solid var(--bordo); background:var(--carta)}
+#mappa-svg{display:none}
+#mappa-svg svg{width:100%; height:auto; border-radius:16px; border:1px solid var(--bordo); background:var(--cream)}
+.avviso-offline{background:var(--carta); border:1px solid var(--bordo); border-radius:12px;
+  padding:10px 14px; font-size:.85rem; color:var(--muto); margin-bottom:10px; display:none}
+.legenda-tappe{margin-top:14px}
+.legenda-tappe .voce{display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px solid var(--bordo); font-size:.92rem}
+.legenda-tappe .voce:last-child{border-bottom:0}
+.legenda-tappe .pallino{flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:var(--terra);
+  color:#fff; display:flex; align-items:center; justify-content:center; font-size:.75rem; font-weight:700}
+.legenda-tappe .poi .pallino{background:var(--palm); width:20px; height:20px; font-size:.62rem}
+.legenda-tappe a{margin-left:auto; flex:0 0 auto; color:var(--majorelle); display:flex; padding:6px}
+
+/* documenti */
+.cat-doc{margin-bottom:8px}
+.doc{
+  width:100%; text-align:left; background:var(--carta); border:1px solid var(--bordo);
+  border-radius:14px; padding:14px 16px; margin-bottom:8px; display:flex; gap:12px; align-items:center;
+}
+.doc .icona{flex:0 0 auto; width:38px; height:38px; border-radius:10px; background:var(--sand);
+  display:flex; align-items:center; justify-content:center; color:var(--terra)}
+.doc .icona svg{width:19px; height:19px}
+.doc .info{flex:1; min-width:0}
+.doc .info b{display:block; font-size:.93rem}
+.doc .info .cod{font-family:ui-monospace, Menlo, monospace; font-size:.82rem; color:var(--terra); font-weight:700}
+.doc .apri{color:var(--muto)}
+
+/* consigli */
+.tema{background:var(--carta); border:1px solid var(--bordo); border-radius:16px; margin-bottom:10px; overflow:hidden}
+.tema summary{list-style:none; display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; font-weight:600}
+.tema summary::-webkit-details-marker{display:none}
+.tema ul{padding:0 16px 14px 34px; font-size:.93rem; line-height:1.5}
+.tema li{margin-bottom:8px}
+
+/* checklist */
+.check{
+  display:flex; gap:12px; align-items:flex-start; background:var(--carta);
+  border:1px solid var(--bordo); border-radius:14px; padding:13px 15px; margin-bottom:8px;
+}
+.check input{width:22px; height:22px; margin-top:1px; accent-color:var(--palm); flex:0 0 auto}
+.check.fatta label{text-decoration:line-through; color:var(--muto)}
+.check label{flex:1; font-size:.93rem; line-height:1.4}
+.check .entro{display:block; font-size:.78rem; color:var(--terra); margin-top:3px}
+.progresso{font-size:.85rem; color:var(--muto); margin-bottom:12px}
+
+/* contatti */
+.contatto{display:flex; align-items:center; gap:12px; background:var(--carta);
+  border:1px solid var(--bordo); border-radius:14px; padding:13px 15px; margin-bottom:8px}
+.contatto .info{flex:1; min-width:0}
+.contatto .info b{display:block; font-size:.93rem}
+.contatto .info small{color:var(--muto)}
+.contatto .chiama{
+  flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:50%; background:var(--palm); color:#fff; text-decoration:none;
+}
+.contatto .chiama svg{width:19px;height:19px}
+
+/* visore documento */
+#visore{position:fixed; inset:0; z-index:900; background:var(--night); display:none; flex-direction:column}
+#visore.aperto{display:flex}
+#visore .barra{display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top) + 8px) 12px 8px; color:#efe7d8}
+#visore .barra b{flex:1; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+#visore .barra button{padding:10px; color:#e2b45e; display:flex}
+#visore .corpo{flex:1; background:#333; overflow:auto; -webkit-overflow-scrolling:touch}
+#visore iframe{width:100%; height:78vh; border:0; background:#fff; display:block}
+#visore img{max-width:100%; display:block; margin:0 auto}
+.toast{
+  position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 24px); transform:translateX(-50%);
+  background:var(--night); color:#efe7d8; padding:12px 20px; border-radius:99px; font-size:.88rem;
+  z-index:950; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap;
+}
+.toast.visibile{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- SBLOCCO -->
+<div id="scherm-sblocco" class="schermo attivo">
+  <div id="sblocco">
+    <div class="logo">Trippone</div>
+    <div class="sotto">I viaggi di Paolo, sempre in tasca</div>
+    <input id="password" type="password" placeholder="Password" autocomplete="current-password" enterkeyhint="go">
+    <button class="entra" id="btn-sblocca">Entra</button>
+    <div class="errore" id="err-sblocco"></div>
+    <div class="stato" id="stato-sblocco"></div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="scherm-home" class="schermo">
+  <div class="testata"><div class="logo">Trippone</div></div>
+  <div class="contenuto">
+    <div id="countdown" class="countdown" style="display:none"></div>
+    <h3 class="sezione">Prossimi viaggi</h3>
+    <div id="lista-prossimi"></div>
+    <div id="blocco-passati" style="display:none">
+      <h3 class="sezione">Viaggi passati</h3>
+      <div id="lista-passati"></div>
+    </div>
+    <div class="footerino">
+      <span id="info-versione"></span> · <span id="stato-offline"></span><br>
+      <button id="btn-scarica-offline">Prepara tutto per l'offline</button> ·
+      <button id="btn-esci">Esci</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIAGGIO -->
+<div id="scherm-viaggio" class="schermo">
+  <div class="testata-v">
+    <div class="riga">
+      <button class="indietro" id="btn-home" aria-label="Indietro">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h1 id="titolo-viaggio"></h1>
+    </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+  <div id="pann-itinerario" class="pannello"></div>
+  <div id="pann-mappa" class="pannello">
+    <div class="avviso-offline" id="avviso-mappa">Sei offline: mappa schematica. Con la rete torna quella zoomabile.</div>
+    <div id="mappa-vera"></div>
+    <div id="mappa-svg"></div>
+    <div class="legenda-tappe" id="legenda-tappe"></div>
+  </div>
+  <div id="pann-documenti" class="pannello"></div>
+  <div id="pann-consigli" class="pannello"></div>
+  <div id="pann-checklist" class="pannello"></div>
+  <div id="pann-contatti" class="pannello"></div>
+</div>
+
+<!-- VISORE DOCUMENTO -->
+<div id="visore">
+  <div class="barra">
+    <button id="visore-chiudi" aria-label="Chiudi">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <b id="visore-titolo"></b>
+    <button id="visore-condividi" aria-label="Condividi">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
+    </button>
+  </div>
+  <div class="corpo" id="visore-corpo"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/leaflet.js"></script>
+<script>
+"use strict";
+
+/* ============ utilità ============ */
+const $ = s => document.querySelector(s);
+const ICONE = {
+  itinerario:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  mappa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3zM9 3v15M15 6v15"/></svg>',
+  documenti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>',
+  consigli:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.4 1 2.3h6c0-.9.4-1.8 1-2.3A7 7 0 0012 2z"/></svg>',
+  checklist:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+  contatti:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.9 2.2z"/></svg>',
+  tel:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3-8.7A2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.9 2.2z"/></svg>',
+  pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg>',
+  scheda:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>',
+  img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+  luna:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>',
+  gmaps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  giu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+};
+const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const GIORNI = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
+function dataIt(iso){ const d = new Date(iso + "T12:00:00");
+  return GIORNI[d.getDay()] + " " + d.getDate() + " " + MESI[d.getMonth()]; }
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("visibile");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("visibile"), 2600); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+/* ============ cifratura ============ */
+const ITERAZIONI = 300000;
+let CHIAVE = null;      // CryptoKey AES-GCM
+let DB = null;          // bundle decifrato
+const cacheDoc = new Map();
+
+async function derivaChiave(password, salt){
+  const mat = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:ITERAZIONI, hash:"SHA-256"},
+    mat, {name:"AES-GCM", length:256}, true, ["encrypt","decrypt"]);
+}
+async function decifra(chiave, buf){
+  const b = new Uint8Array(buf);
+  return crypto.subtle.decrypt({name:"AES-GCM", iv:b.slice(16,28)}, chiave, b.slice(28));
+}
+async function scaricaEnc(percorso){
+  const r = await fetch(percorso);
+  if(!r.ok) throw new Error("fetch " + percorso + ": " + r.status);
+  return r.arrayBuffer();
+}
+function saltHex(buf){ return Array.from(new Uint8Array(buf).slice(0,16)).map(b => b.toString(16).padStart(2,"0")).join(""); }
+
+async function provaSblocco(password){
+  const buf = await scaricaEnc("dati.enc");
+  const salt = new Uint8Array(buf).slice(0,16);
+  const chiave = await derivaChiave(password, salt);
+  const chiaro = await decifra(chiave, buf); // lancia se password sbagliata
+  const grezzo = await crypto.subtle.exportKey("raw", chiave);
+  localStorage.setItem("trippone-chiave", btoa(String.fromCharCode(...new Uint8Array(grezzo))));
+  localStorage.setItem("trippone-salt", saltHex(buf));
+  CHIAVE = chiave;
+  return JSON.parse(new TextDecoder().decode(chiaro));
+}
+async function sbloccoAutomatico(){
+  const b64 = localStorage.getItem("trippone-chiave");
+  if(!b64) return null;
+  try{
+    const buf = await scaricaEnc("dati.enc");
+    const grezzo = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const chiave = await crypto.subtle.importKey("raw", grezzo, {name:"AES-GCM"}, true, ["encrypt","decrypt"]);
+    const chiaro = await decifra(chiave, buf);
+    CHIAVE = chiave;
+    return JSON.parse(new TextDecoder().decode(chiaro));
+  }catch(e){
+    // chiave vecchia (password o salt cambiati) oppure offline senza cache
+    return null;
+  }
+}
+
+/* ============ navigazione schermi ============ */
+function mostra(id){
+  document.querySelectorAll(".schermo").forEach(s => s.classList.remove("attivo"));
+  $(id).classList.add("attivo");
+  window.scrollTo(0,0);
+}
+
+/* ============ home ============ */
+function oggiISO(){ const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+
+function renderHome(){
+  const oggi = oggiISO();
+  const prossimi = DB.viaggi.filter(v => v.fine >= oggi);
+  const passati  = DB.viaggi.filter(v => v.fine <  oggi);
+
+  const cd = $("#countdown");
+  if(prossimi.length){
+    const v = prossimi[0];
+    const msGiorno = 86400000;
+    const diff = Math.round((new Date(v.inizio + "T00:00:00") - new Date(oggi + "T00:00:00")) / msGiorno);
+    let grande, picc;
+    if(diff > 0){ grande = "Mancano " + diff + " giorni"; picc = v.titolo + " · si parte " + dataIt(v.inizio); }
+    else{
+      const g = Math.round((new Date(oggi+"T00:00:00") - new Date(v.inizio+"T00:00:00"))/msGiorno) + 1;
+      const tot = Math.round((new Date(v.fine+"T00:00:00") - new Date(v.inizio+"T00:00:00"))/msGiorno) + 1;
+      grande = "Giorno " + g + " di " + tot; picc = v.titolo + " · in viaggio";
+    }
+    cd.innerHTML = '<div class="grande">' + esc(grande) + '</div><div class="picc">' + esc(picc) + '</div>';
+    cd.style.display = "block";
+    cd.onclick = () => apriViaggio(v.id);
+  } else cd.style.display = "none";
+
+  const cardHTML = v =>
+    '<button class="card-viaggio" data-id="' + esc(v.id) + '">' +
+    '<div class="eyebrow">' + esc(v.sottotitolo || "") + '</div>' +
+    '<h2>' + esc(v.titolo) + '</h2>' +
+    '<div class="date">' + dataIt(v.inizio) + " → " + dataIt(v.fine) + '</div></button>';
+
+  $("#lista-prossimi").innerHTML = prossimi.map(cardHTML).join("") || '<p style="color:var(--muto)">Nessun viaggio in programma.</p>';
+  $("#lista-passati").innerHTML = passati.map(cardHTML).join("");
+  $("#blocco-passati").style.display = passati.length ? "block" : "none";
+  document.querySelectorAll(".card-viaggio").forEach(c => c.onclick = () => apriViaggio(c.dataset.id));
+  $("#info-versione").textContent = "Dati del " + (DB.generato || "?");
+  aggiornaStatoOffline();
+}
+
+/* ============ viaggio ============ */
+let VIAGGIO = null;
+let mappaInizializzata = false;
+
+const TABS = [
+  ["itinerario","Itinerario"], ["mappa","Mappa"], ["documenti","Documenti"],
+  ["consigli","Consigli"], ["checklist","Checklist"], ["contatti","Contatti"]
+];
+
+function apriViaggio(id){
+  VIAGGIO = DB.viaggi.find(v => v.id === id);
+  if(!VIAGGIO) return;
+  $("#titolo-viaggio").textContent = VIAGGIO.titolo;
+  $("#tabs").innerHTML = TABS.map(([k,nome],i) =>
+    '<button class="tab' + (i===0 ? " attivo" : "") + '" data-tab="' + k + '">' + ICONE[k] + esc(nome) + '</button>').join("");
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => apriTab(t.dataset.tab));
+  mappaInizializzata = false;
+  renderItinerario(); renderDocumenti(); renderConsigli(); renderChecklist(); renderContatti();
+  apriTab("itinerario");
+  mostra("#scherm-viaggio");
+}
+function apriTab(k){
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("attivo", t.dataset.tab === k));
+  document.querySelectorAll(".pannello").forEach(p => p.classList.remove("attivo"));
+  $("#pann-" + k).classList.add("attivo");
+  if(k === "mappa") preparaMappa();
+}
+
+function renderItinerario(){
+  const oggi = oggiISO();
+  $("#pann-itinerario").innerHTML = VIAGGIO.itinerario.map((g,i) => {
+    const d = new Date(g.data + "T12:00:00");
+    const aperto = g.data === oggi ? " open" : "";
+    return '<details class="giorno' + (g.data === oggi ? " oggi" : "") + '"' + aperto + '>' +
+      '<summary><div class="dnum"><b>' + d.getDate() + '</b><span>' + MESI[d.getMonth()] + '</span></div>' +
+      '<div class="dtit"><b>' + esc(g.titolo) + '</b><small>' + esc(GIORNI[d.getDay()]) + (g.notte ? " · notte: " + esc(g.notte) : "") + '</small></div>' +
+      '<span class="freccia">' + ICONE.giu + '</span></summary>' +
+      '<div class="corpo"><p>' + esc(g.dettagli) + '</p>' +
+      (g.soste && g.soste.length ? '<div class="etichetta">Da non perdere</div><ul>' + g.soste.map(s => "<li>" + esc(s) + "</li>").join("") + '</ul>' : "") +
+      (g.notte ? '<div class="notte-chip">' + ICONE.luna + esc(g.notte) + '</div><br>' : "") +
+      (g.gmaps ? '<a class="bott" style="margin-top:12px" href="' + esc(g.gmaps) + '" target="_blank" rel="noopener">' + ICONE.gmaps + 'Apri in Google Maps</a>' : "") +
+      '</div></details>';
+  }).join("");
+}
+
+/* ---- mappa ---- */
+function preparaMappa(){
+  const online = navigator.onLine;
+  $("#avviso-mappa").style.display = online ? "none" : "block";
+  $("#mappa-vera").style.display = online ? "block" : "none";
+  $("#mappa-svg").style.display = online ? "none" : "block";
+  if(!online) disegnaSvg();
+  else if(!mappaInizializzata){ mappaInizializzata = true; setTimeout(disegnaLeaflet, 60); }
+  if(!$("#legenda-tappe").innerHTML) disegnaLegenda();
+}
+function disegnaLeaflet(){
+  try{
+    const mappa = L.map("mappa-vera", {scrollWheelZoom:true, tap:true});
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {attribution:'&copy; OpenStreetMap, &copy; CARTO', maxZoom:18}).addTo(mappa);
+    const tappe = VIAGGIO.tappe;
+    const linea = tappe.filter(t => t.tipo === "tappa").map(t => [t.lat, t.lng]);
+    L.polyline(linea, {color:"#c05a2b", weight:3, dashArray:"7 7", opacity:.85}).addTo(mappa);
+    tappe.forEach(t => {
+      const grande = t.tipo === "tappa";
+      const icona = L.divIcon({className:"",
+        html:'<div style="width:' + (grande?26:18) + 'px;height:' + (grande?26:18) + 'px;border-radius:50%;background:' +
+          (grande ? "#c05a2b" : "#3e6b4f") + ';color:#fff;display:flex;align-items:center;justify-content:center;' +
+          'font:700 ' + (grande?12:9) + 'px -apple-system,sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + t.n + '</div>',
+        iconSize:[grande?26:18, grande?26:18], iconAnchor:[grande?13:9, grande?13:9]});
+      L.marker([t.lat, t.lng], {icon:icona}).addTo(mappa).bindPopup("<b>" + esc(t.nome) + "</b>");
+    });
+    mappa.fitBounds(L.latLngBounds(tappe.map(t => [t.lat, t.lng])), {padding:[28,28]});
+    mappa.on("load", () => {});
+  }catch(e){
+    $("#mappa-vera").style.display = "none";
+    $("#mappa-svg").style.display = "block";
+    disegnaSvg();
+  }
+}
+function disegnaSvg(){
+  const cont = $("#mappa-svg");
+  if(cont.dataset.fatto) return;
+  cont.dataset.fatto = "1";
+  const tappe = VIAGGIO.tappe;
+  // proiezione equirettangolare dentro il viewBox
+  const lats = tappe.map(t => t.lat), lngs = tappe.map(t => t.lng);
+  const costaAtl = [[35.77,-5.93],[35.17,-6.15],[34.03,-6.84],[33.60,-7.63],[33.25,-8.50],[32.30,-9.24],[31.51,-9.77],[30.90,-9.83],[30.40,-9.61],[29.70,-9.75],[28.90,-10.5]];
+  const costaMed = [[35.77,-5.93],[35.90,-5.40],[35.20,-4.30],[35.25,-3.00],[35.10,-2.20]];
+  costaAtl.concat(costaMed).forEach(c => { lats.push(c[0]); lngs.push(c[1]); });
+  const mLat = Math.min(...lats)-.4, MLat = Math.max(...lats)+.4;
+  const mLng = Math.min(...lngs)-.5, MLng = Math.max(...lngs)+.5;
+  const W = 700, H = 620;
+  const X = lng => (lng - mLng) / (MLng - mLng) * (W - 60) + 30;
+  const Y = lat => (MLat - lat) / (MLat - mLat) * (H - 60) + 30;
+  const percorso = pts => pts.map((p,i) => (i ? "L" : "M") + X(p[1]).toFixed(1) + " " + Y(p[0]).toFixed(1)).join(" ");
+  const linea = tappe.filter(t => t.tipo === "tappa");
+  let s = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+    '<path d="' + percorso(costaAtl) + '" fill="none" stroke="#4a52c9" stroke-width="3" stroke-linecap="round" opacity=".5"/>' +
+    '<path d="' + percorso(costaMed) + '" fill="none" stroke="#4a52c9" stroke-width="3" stroke-linecap="round" opacity=".5"/>' +
+    '<path d="' + percorso(linea.map(t => [t.lat, t.lng])) + '" fill="none" stroke="#c05a2b" stroke-width="3" stroke-dasharray="8 7" stroke-linecap="round"/>';
+  tappe.forEach(t => {
+    const grande = t.tipo === "tappa";
+    s += '<circle cx="' + X(t.lng).toFixed(1) + '" cy="' + Y(t.lat).toFixed(1) + '" r="' + (grande?11:7) + '" fill="' + (grande ? "#c05a2b" : "#3e6b4f") + '" stroke="#faf6ec" stroke-width="2"/>' +
+      '<text x="' + X(t.lng).toFixed(1) + '" y="' + (Y(t.lat) + (grande?4:3)).toFixed(1) + '" text-anchor="middle" font-size="' + (grande?11:8) + '" font-weight="700" fill="#fff" font-family="-apple-system,sans-serif">' + t.n + '</text>';
+  });
+  ["Oceano Atlantico"].forEach(() => {
+    s += '<text x="' + (X(-10.3)) + '" y="' + Y(32.4) + '" font-size="13" fill="#4a52c9" opacity=".55" font-style="italic" font-family="Georgia,serif" transform="rotate(-72 ' + X(-10.3) + ' ' + Y(32.4) + ')">Oceano Atlantico</text>';
+  });
+  s += '</svg>';
+  cont.innerHTML = s;
+}
+function disegnaLegenda(){
+  $("#legenda-tappe").innerHTML = VIAGGIO.tappe.map(t =>
+    '<div class="voce' + (t.tipo === "poi" ? " poi" : "") + '"><span class="pallino">' + t.n + '</span>' +
+    '<span>' + esc(t.nome) + '</span>' +
+    '<a href="https://maps.google.com/?q=' + t.lat + ',' + t.lng + '" target="_blank" rel="noopener" aria-label="Apri in Google Maps">' + ICONE.gmaps + '</a></div>').join("");
+}
+
+/* ---- documenti ---- */
+function renderDocumenti(){
+  const cats = [...new Set(VIAGGIO.documenti.map(d => d.categoria))];
+  $("#pann-documenti").innerHTML = cats.map(cat =>
+    '<div class="cat-doc"><h3 class="sezione">' + esc(cat) + '</h3>' +
+    VIAGGIO.documenti.filter(d => d.categoria === cat).map((d) => {
+      const idx = VIAGGIO.documenti.indexOf(d);
+      const icona = d.file ? (d.mime === "image/jpeg" ? ICONE.img : ICONE.pdf) : ICONE.scheda;
+      return '<button class="doc" data-idx="' + idx + '">' +
+        '<span class="icona">' + icona + '</span>' +
+        '<span class="info"><b>' + esc(d.titolo) + '</b>' +
+        (d.codice ? '<span class="cod">' + esc(d.codice) + '</span>' : "") + '</span>' +
+        '<span class="apri">' + ICONE.giu.replace('M6 9l6 6 6-6','M9 6l6 6-6 6') + '</span></button>';
+    }).join("") + '</div>').join("");
+  document.querySelectorAll("#pann-documenti .doc").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
+}
+async function apriDocumento(idx){
+  const d = VIAGGIO.documenti[idx];
+  const corpo = $("#visore-corpo");
+  $("#visore-titolo").textContent = d.titolo;
+  corpo.innerHTML = "";
+  $("#visore").classList.add("aperto");
+  $("#visore-condividi").style.display = d.file ? "flex" : "none";
+
+  // scheda testuale sempre presente in testa
+  let schedaHTML = "";
+  if(d.scheda || d.codice){
+    schedaHTML = '<div style="background:var(--carta);color:var(--ink);padding:16px 18px;font-size:.93rem;line-height:1.55">' +
+      (d.codice ? '<div style="font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--terra);font-size:1.05rem;margin-bottom:8px">' + esc(d.codice) + '</div>' : "") +
+      esc(d.scheda || "") + '</div>';
+  }
+  if(!d.file){ corpo.innerHTML = schedaHTML; return; }
+
+  corpo.innerHTML = schedaHTML + '<div style="padding:30px;text-align:center;color:#aaa">Apro il documento...</div>';
+  try{
+    let blob = cacheDoc.get(d.file);
+    if(!blob){
+      const chiaro = await decifra(CHIAVE, await scaricaEnc(d.file));
+      blob = new Blob([chiaro], {type: d.mime || "application/pdf"});
+      cacheDoc.set(d.file, blob);
+    }
+    const url = URL.createObjectURL(blob);
+    const vista = d.mime === "image/jpeg"
+      ? '<img src="' + url + '" alt="">'
+      : '<iframe src="' + url + '"></iframe>';
+    corpo.innerHTML = schedaHTML + vista;
+    corpo.dataset.file = d.file;
+    corpo.dataset.nome = d.nomeOriginale || d.titolo;
+  }catch(e){
+    corpo.innerHTML = schedaHTML + '<div style="padding:30px;text-align:center;color:#e07a48">Documento non disponibile offline: aprilo una volta con la rete, poi resta salvato.</div>';
+  }
+}
+$("#visore-chiudi").onclick = () => { $("#visore").classList.remove("aperto"); $("#visore-corpo").innerHTML = ""; };
+$("#visore-condividi").onclick = async () => {
+  const file = $("#visore-corpo").dataset.file;
+  const blob = file && cacheDoc.get(file);
+  if(!blob) return toast("Apri prima il documento");
+  const nome = $("#visore-corpo").dataset.nome || file.split("/").pop().replace(/\.enc$/, "");
+  const f = new File([blob], nome, {type: blob.type});
+  if(navigator.canShare && navigator.canShare({files:[f]})) await navigator.share({files:[f]}).catch(() => {});
+  else toast("Condivisione non disponibile");
+};
+
+/* ---- consigli ---- */
+function renderConsigli(){
+  $("#pann-consigli").innerHTML = VIAGGIO.consigli.map(c =>
+    '<details class="tema"><summary>' + esc(c.tema) + '<span class="freccia" style="margin-left:auto;color:var(--muto)">' + ICONE.giu + '</span></summary>' +
+    '<ul>' + c.punti.map(p => "<li>" + esc(p) + "</li>").join("") + '</ul></details>').join("");
+}
+
+/* ---- checklist ---- */
+function chiaveCheck(){ return "trippone-check-" + VIAGGIO.id; }
+function renderChecklist(){
+  const stato = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
+  const fatte = VIAGGIO.checklist.filter(c => stato[c.id]).length;
+  $("#pann-checklist").innerHTML =
+    '<div class="progresso">' + fatte + " su " + VIAGGIO.checklist.length + " fatte</div>" +
+    VIAGGIO.checklist.map(c =>
+      '<div class="check' + (stato[c.id] ? " fatta" : "") + '"><input type="checkbox" id="ck-' + esc(c.id) + '" ' + (stato[c.id] ? "checked" : "") + '>' +
+      '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) +
+      (c.entro ? '<span class="entro">entro ' + dataIt(c.entro) + '</span>' : "") + '</label></div>').join("");
+  VIAGGIO.checklist.forEach(c => {
+    $("#ck-" + CSS.escape(c.id)).onchange = e => {
+      const s = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
+      if(e.target.checked) s[c.id] = true; else delete s[c.id];
+      localStorage.setItem(chiaveCheck(), JSON.stringify(s));
+      renderChecklist();
+    };
+  });
+}
+
+/* ---- contatti ---- */
+function renderContatti(){
+  $("#pann-contatti").innerHTML = VIAGGIO.contatti.map(c =>
+    '<div class="contatto"><div class="info"><b>' + esc(c.nome) + '</b>' +
+    '<small>' + esc(c.tel) + (c.note ? " · " + esc(c.note) : "") + '</small></div>' +
+    '<a class="chiama" href="tel:' + esc(c.tel) + '" aria-label="Chiama">' + ICONE.tel + '</a></div>').join("");
+}
+
+/* ============ offline warm-up ============ */
+async function preparaOffline(interattivo){
+  if(!navigator.onLine){ if(interattivo) toast("Sei offline: riprova con la rete"); return; }
+  const file = DB.viaggi.flatMap(v => (v.documenti || []).filter(d => d.file).map(d => d.file));
+  let ok = 0;
+  for(const f of file){
+    try{ const r = await fetch(f); if(r.ok) ok++; }catch(e){}
+  }
+  localStorage.setItem("trippone-offline-pronto", ok === file.length ? DB.generato || "si" : "");
+  aggiornaStatoOffline();
+  if(interattivo) toast(ok === file.length ? "Tutto pronto per l'offline" : "Scaricati " + ok + " su " + file.length);
+}
+function aggiornaStatoOffline(){
+  const pronto = localStorage.getItem("trippone-offline-pronto");
+  $("#stato-offline").textContent = pronto ? "offline pronto" : "offline da preparare";
+}
+
+/* ============ avvio ============ */
+$("#btn-sblocca").onclick = async () => {
+  const pw = $("#password").value;
+  if(!pw) return;
+  $("#err-sblocco").textContent = "";
+  $("#stato-sblocco").textContent = "Verifico...";
+  try{
+    DB = await provaSblocco(pw);
+    $("#stato-sblocco").textContent = "";
+    renderHome(); mostra("#scherm-home");
+    preparaOffline(false);
+  }catch(e){
+    $("#stato-sblocco").textContent = "";
+    $("#err-sblocco").textContent = navigator.onLine ? "Password sbagliata" : "Serve la rete per il primo accesso";
+  }
+};
+$("#password").addEventListener("keydown", e => { if(e.key === "Enter") $("#btn-sblocca").click(); });
+$("#btn-home").onclick = () => { renderHome(); mostra("#scherm-home"); };
+$("#btn-esci").onclick = () => {
+  localStorage.removeItem("trippone-chiave");
+  localStorage.removeItem("trippone-salt");
+  location.reload();
+};
+$("#btn-scarica-offline").onclick = () => preparaOffline(true);
+window.addEventListener("online", () => { if(DB) preparaOffline(false); });
+
+(async function init(){
+  DB = await sbloccoAutomatico();
+  if(DB){ renderHome(); mostra("#scherm-home"); preparaOffline(false); }
+  else mostra("#scherm-sblocco");
+})();
+
+/* ============ service worker ============ */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+    let ricaricato = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if(ricaricato) return; ricaricato = true; location.reload();
+    });
+  });
+}
+</script>
+</body>
+</html>
