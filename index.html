@@ -88,19 +88,32 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
   position:sticky; top:0; z-index:600; background:var(--night); color:#efe7d8;
   padding:calc(env(safe-area-inset-top) + 10px) 12px 0;
 }
-.testata-v .riga{display:flex; align-items:center; gap:8px}
+.testata-v .riga{display:flex; align-items:center; gap:8px; padding-bottom:10px}
 .testata-v .indietro{padding:10px; display:flex; color:#e2b45e}
-.testata-v h1{font-size:1.25rem; flex:1}
-.tabs{display:flex; overflow-x:auto; gap:4px; padding:10px 4px 0; scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{
-  flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:10px 14px 12px;
-  color:rgba(239,231,216,.65); font-size:.9rem; font-weight:600;
-  border-bottom:3px solid transparent; white-space:nowrap;
+.testata-v h1{font-size:1.25rem}
+#sezione-corrente{flex:1; text-align:right; padding-right:6px; font-size:.78rem;
+  letter-spacing:.14em; text-transform:uppercase; color:rgba(239,231,216,.5)}
+/* barra sezioni fissa in basso: tutte e sei visibili insieme */
+.tabs{
+  position:fixed; left:0; right:0; bottom:0; z-index:700;
+  display:flex; background:var(--night);
+  border-top:1px solid rgba(239,231,216,.12);
+  padding:6px 2px calc(env(safe-area-inset-bottom) + 4px);
 }
-.tab.attivo{color:#e2b45e; border-bottom-color:#c05a2b}
-.tab svg{width:17px;height:17px}
-.pannello{display:none; padding:18px 16px 60px; max-width:640px; margin:0 auto}
+.tab{
+  flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:6px 2px; color:rgba(239,231,216,.55); font-size:.6rem; font-weight:600;
+  letter-spacing:.01em; position:relative;
+}
+.tab.attivo{color:#e2b45e}
+.tab svg{width:21px; height:21px}
+.tab .etic{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%}
+.tab .badge{
+  position:absolute; top:2px; right:calc(50% - 20px); min-width:16px; height:16px;
+  border-radius:99px; background:var(--terra); color:#fff; font-size:.58rem;
+  display:flex; align-items:center; justify-content:center; padding:0 4px; line-height:1;
+}
+.pannello{display:none; padding:18px 16px calc(env(safe-area-inset-bottom) + 96px); max-width:640px; margin:0 auto}
 .pannello.attivo{display:block}
 
 /* itinerario */
@@ -178,7 +191,12 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
 .check.fatta label{text-decoration:line-through; color:var(--muto)}
 .check label{flex:1; font-size:.93rem; line-height:1.4}
 .check .entro{display:block; font-size:.78rem; color:var(--terra); margin-top:3px}
-.progresso{font-size:.85rem; color:var(--muto); margin-bottom:12px}
+.check.ritardo{border-color:var(--terra)}
+.check.ritardo .entro{font-weight:700}
+.check.fatta .entro{color:var(--muto); font-weight:400}
+.progresso{font-size:.9rem; color:var(--muto); margin-bottom:14px}
+.barra-prog{height:6px; border-radius:99px; background:var(--bordo); margin-top:8px; overflow:hidden}
+.barra-prog i{display:block; height:100%; background:var(--palm); border-radius:99px; transition:width .3s}
 
 /* contatti */
 .contatto{display:flex; align-items:center; gap:12px; background:var(--carta);
@@ -250,9 +268,10 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <h1 id="titolo-viaggio"></h1>
+      <span id="sezione-corrente"></span>
     </div>
-    <div class="tabs" id="tabs"></div>
   </div>
+  <div class="tabs" id="tabs"></div>
   <div id="pann-itinerario" class="pannello"></div>
   <div id="pann-mappa" class="pannello">
     <div class="avviso-offline" id="avviso-mappa">Sei offline: mappa schematica. Con la rete torna quella zoomabile.</div>
@@ -420,7 +439,9 @@ function apriViaggio(id){
   if(!VIAGGIO) return;
   $("#titolo-viaggio").textContent = VIAGGIO.titolo;
   $("#tabs").innerHTML = TABS.map(([k,nome],i) =>
-    '<button class="tab' + (i===0 ? " attivo" : "") + '" data-tab="' + k + '">' + ICONE[k] + esc(nome) + '</button>').join("");
+    '<button class="tab' + (i===0 ? " attivo" : "") + '" data-tab="' + k + '">' + ICONE[k] +
+    '<span class="etic">' + esc(nome) + '</span>' +
+    (k === "checklist" ? '<span class="badge" id="badge-check"></span>' : "") + '</button>').join("");
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => apriTab(t.dataset.tab));
   mappaInizializzata = false;
   renderItinerario(); renderDocumenti(); renderConsigli(); renderChecklist(); renderContatti();
@@ -431,6 +452,9 @@ function apriTab(k){
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("attivo", t.dataset.tab === k));
   document.querySelectorAll(".pannello").forEach(p => p.classList.remove("attivo"));
   $("#pann-" + k).classList.add("attivo");
+  const nome = (TABS.find(t => t[0] === k) || [])[1] || "";
+  $("#sezione-corrente").textContent = nome;
+  window.scrollTo(0, 0);
   if(k === "mappa") preparaMappa();
 }
 
@@ -599,14 +623,32 @@ function renderConsigli(){
 function chiaveCheck(){ return "trippone-check-" + VIAGGIO.id; }
 function renderChecklist(){
   const stato = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
-  const fatte = VIAGGIO.checklist.filter(c => stato[c.id]).length;
+  const oggi = oggiISO();
+  // da fare per prime le scadenze piu' vicine; le fatte scendono in fondo
+  const voci = VIAGGIO.checklist.slice().sort((a,b) => {
+    const fa = stato[a.id] ? 1 : 0, fb = stato[b.id] ? 1 : 0;
+    if(fa !== fb) return fa - fb;
+    return (a.entro || "9999").localeCompare(b.entro || "9999");
+  });
+  const fatte = voci.filter(c => stato[c.id]).length;
+  const restanti = voci.length - fatte;
+  const scadute = voci.filter(c => !stato[c.id] && c.entro && c.entro < oggi).length;
+
   $("#pann-checklist").innerHTML =
-    '<div class="progresso">' + fatte + " su " + VIAGGIO.checklist.length + " fatte</div>" +
-    VIAGGIO.checklist.map(c =>
-      '<div class="check' + (stato[c.id] ? " fatta" : "") + '"><input type="checkbox" id="ck-' + esc(c.id) + '" ' + (stato[c.id] ? "checked" : "") + '>' +
-      '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) +
-      (c.entro ? '<span class="entro">entro ' + dataIt(c.entro) + '</span>' : "") + '</label></div>').join("");
-  VIAGGIO.checklist.forEach(c => {
+    '<div class="progresso"><b>' + fatte + " su " + voci.length + "</b> fatte" +
+      (scadute ? ' · <span style="color:var(--terra);font-weight:700">' + scadute + (scadute === 1 ? " scaduta" : " scadute") + '</span>' : "") +
+      '<div class="barra-prog"><i style="width:' + Math.round(fatte / voci.length * 100) + '%"></i></div></div>' +
+    voci.map(c => {
+      const fatta = !!stato[c.id];
+      const inRitardo = !fatta && c.entro && c.entro < oggi;
+      return '<div class="check' + (fatta ? " fatta" : "") + (inRitardo ? " ritardo" : "") + '">' +
+        '<input type="checkbox" id="ck-' + esc(c.id) + '" ' + (fatta ? "checked" : "") + '>' +
+        '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) +
+        (c.entro ? '<span class="entro">' + (inRitardo ? "SCADUTA il " : "entro ") + dataIt(c.entro) + '</span>' : "") +
+        '</label></div>';
+    }).join("");
+
+  voci.forEach(c => {
     $("#ck-" + CSS.escape(c.id)).onchange = e => {
       const s = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
       if(e.target.checked) s[c.id] = true; else delete s[c.id];
@@ -614,6 +656,9 @@ function renderChecklist(){
       renderChecklist();
     };
   });
+
+  const badge = $("#badge-check");
+  if(badge){ badge.textContent = restanti || ""; badge.style.display = restanti ? "flex" : "none"; }
 }
 
 /* ---- contatti ---- */
