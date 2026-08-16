@@ -271,6 +271,23 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
 .legenda-colori span{display:flex; align-items:center; gap:6px}
 .legenda-colori i{width:13px; height:13px; border-radius:50%; display:inline-block}
 
+/* note personali sui giorni */
+.nota-giorno{
+  background:var(--sand); border-left:3px solid var(--gold); border-radius:0 10px 10px 0;
+  padding:10px 12px; margin:12px 0 4px; font-size:.92rem; line-height:1.5; white-space:pre-wrap;
+}
+.nota-giorno .eyebrow{display:block; margin-bottom:4px}
+.btn-nota{color:var(--majorelle); font-weight:600; font-size:.88rem; padding:8px 0; display:inline-flex; align-items:center; gap:6px}
+.form-nota textarea{
+  width:100%; min-height:90px; padding:12px; border:1px solid var(--bordo); border-radius:10px;
+  background:var(--cream); color:var(--ink); font:inherit; font-size:.93rem; resize:vertical; margin:8px 0;
+}
+
+/* documenti in evidenza */
+.btn-stella{flex:0 0 auto; padding:0 4px 0 10px; color:var(--muto); display:flex; align-items:center}
+.btn-stella.attiva{color:var(--gold)}
+.btn-stella.attiva svg{fill:currentColor}
+
 /* salvati */
 .salvato{display:flex; gap:12px; align-items:center; background:var(--carta);
   border:1px solid var(--bordo); border-radius:14px; padding:13px 15px; margin-bottom:8px}
@@ -466,10 +483,10 @@ async function sbloccoAutomatico(){
 // Voci di testo (checklist, valigia, contatti, salvati) in localStorage;
 // i documenti caricati (blob) in IndexedDB.
 function extra(){
-  const base = {checklist:[], valigia:[], contatti:[], salvati:[], nascosti:{}};
+  const base = {checklist:[], valigia:[], contatti:[], salvati:[], consigli:[], nascosti:{}, note:{}, preferiti:[]};
   try{
-    const e = Object.assign(base, JSON.parse(localStorage.getItem("trippone-extra-" + VIAGGIO.id) || "{}"));
-    e.nascosti = e.nascosti || {};
+    const e = Object.assign({}, base, JSON.parse(localStorage.getItem("trippone-extra-" + VIAGGIO.id) || "{}"));
+    e.nascosti = e.nascosti || {}; e.note = e.note || {}; e.preferiti = e.preferiti || []; e.consigli = e.consigli || [];
     return e;
   }
   catch(e){ return base; }
@@ -627,21 +644,46 @@ function apriTab(k){
   if(k === "mappa") preparaMappa();
 }
 
-function renderItinerario(){
+function renderItinerario(apriData){
   const oggi = oggiISO();
+  const note = extra().note;
   $("#pann-itinerario").innerHTML = VIAGGIO.itinerario.map((g,i) => {
     const d = new Date(g.data + "T12:00:00");
-    const aperto = g.data === oggi ? " open" : "";
-    return '<details class="giorno' + (g.data === oggi ? " oggi" : "") + '"' + aperto + '>' +
+    const aperto = (g.data === oggi || g.data === apriData) ? " open" : "";
+    const nota = note[g.data];
+    return '<details class="giorno' + (g.data === oggi ? " oggi" : "") + '"' + aperto + ' data-giorno="' + g.data + '">' +
       '<summary><div class="dnum"><b>' + d.getDate() + '</b><span>' + MESI[d.getMonth()] + '</span></div>' +
       '<div class="dtit"><b>' + esc(g.titolo) + '</b><small>' + esc(GIORNI[d.getDay()]) + (g.notte ? " · notte: " + esc(g.notte) : "") + '</small></div>' +
       '<span class="freccia">' + ICONE.giu + '</span></summary>' +
       '<div class="corpo"><p>' + esc(g.dettagli) + '</p>' +
       (g.soste && g.soste.length ? '<div class="etichetta">Da non perdere</div><ul>' + g.soste.map(s => "<li>" + esc(s) + "</li>").join("") + '</ul>' : "") +
       (g.notte ? '<div class="notte-chip">' + ICONE.luna + esc(g.notte) + '</div><br>' : "") +
-      (g.gmaps ? '<a class="bott" style="margin-top:12px" href="' + esc(g.gmaps) + '" target="_blank" rel="noopener">' + ICONE.gmaps + 'Apri in Google Maps</a>' : "") +
+      (nota ? '<div class="nota-giorno"><span class="eyebrow">La mia nota</span>' + esc(nota) + '</div>' : "") +
+      '<div class="zona-nota" data-data="' + g.data + '">' +
+        '<button class="btn-nota">' + ICONE.piu + (nota ? "Modifica nota" : "Aggiungi nota") + '</button></div>' +
+      (g.gmaps ? '<br><a class="bott" style="margin-top:8px" href="' + esc(g.gmaps) + '" target="_blank" rel="noopener">' + ICONE.gmaps + 'Apri in Google Maps</a>' : "") +
       '</div></details>';
   }).join("");
+
+  document.querySelectorAll("#pann-itinerario .zona-nota .btn-nota").forEach(b => b.onclick = () => {
+    const zona = b.parentElement;
+    const data = zona.dataset.data;
+    const testo = extra().note[data] || "";
+    zona.innerHTML = '<div class="form-nota"><textarea placeholder="Scrivi qui la tua nota per questo giorno">' + esc(testo) + '</textarea>' +
+      '<div class="riga-bott" style="display:flex;gap:8px">' +
+      '<button class="annulla" style="flex:1;padding:12px;border-radius:10px;background:var(--sand);border:1px solid var(--bordo)">Annulla</button>' +
+      '<button class="ok" style="flex:1;padding:12px;border-radius:10px;background:var(--palm);color:#fff;font-weight:600">Salva</button></div></div>';
+    zona.querySelector("textarea").focus();
+    zona.querySelector(".annulla").onclick = () => renderItinerario(data);
+    zona.querySelector(".ok").onclick = () => {
+      const e = extra();
+      const nuovo = zona.querySelector("textarea").value.trim();
+      if(nuovo) e.note[data] = nuovo; else delete e.note[data];
+      salvaExtra(e);
+      renderItinerario(data);
+      toast(nuovo ? "Nota salvata" : "Nota rimossa");
+    };
+  });
 }
 
 /* ---- mappa ---- */
@@ -769,16 +811,24 @@ async function renderDocumenti(){
       '<div class="riga-bott"><button class="annulla">Annulla</button><button class="ok">Salva</button></div>' +
     '</div>';
 
+  const preferiti = extra().preferiti;
   const rigaDoc = d => {
     const icona = d.mio ? (d.mime.startsWith("image/") ? ICONE.img : ICONE.pdf)
                         : (d.file ? (d.mime === "image/jpeg" ? ICONE.img : ICONE.pdf) : ICONE.scheda);
     const rif = d.mio ? 'data-mio="' + esc(d.id) + '"' : 'data-idx="' + VIAGGIO.documenti.indexOf(VIAGGIO.documenti.find(x => x.id === d.id)) + '"';
-    return '<div class="doc"><button class="doc-apri" ' + rif + '>' +
+    const pin = preferiti.includes(d.id);
+    return '<div class="doc"><button class="btn-stella' + (pin ? " attiva" : "") + '" data-pin="' + esc(d.id) + '" aria-label="In evidenza">' + ICONE.stella + '</button>' +
+      '<button class="doc-apri" style="padding-left:6px" ' + rif + '>' +
       '<span class="icona">' + icona + '</span>' +
       '<span class="info"><b>' + esc(d.titolo) + (d.mio ? '<span class="mio-tag">mio</span>' : "") + '</b>' +
       (d.codice ? '<span class="cod">' + esc(d.codice) + '</span>' : "") + '</span></button>' +
       '<button class="btn-elimina" data-del="' + esc(d.id) + '" data-tipo="' + (d.mio ? "mio" : "bundle") + '" aria-label="Elimina">' + ICONE.cestino + '</button></div>';
   };
+
+  const inEvidenza = tutte.filter(d => preferiti.includes(d.id));
+  if(inEvidenza.length && !filtroCat)
+    html += '<div class="cat-doc"><h3 class="sezione" style="color:var(--gold)">In evidenza</h3>' +
+      inEvidenza.map(rigaDoc).join("") + '</div>';
 
   const daMostrare = filtroCat ? [filtroCat] : CATEGORIE.map(([c]) => c);
   html += daMostrare.filter(c => contaPer[c]).map(cat =>
@@ -792,6 +842,13 @@ async function renderDocumenti(){
 
   document.querySelectorAll("#pann-documenti .chip-cat").forEach(b =>
     b.onclick = () => { filtroCat = b.dataset.cat || null; renderDocumenti(); });
+  document.querySelectorAll("#pann-documenti [data-pin]").forEach(b => b.onclick = () => {
+    const e = extra();
+    const id = b.dataset.pin;
+    e.preferiti = e.preferiti.includes(id) ? e.preferiti.filter(x => x !== id) : e.preferiti.concat(id);
+    salvaExtra(e);
+    renderDocumenti();
+  });
   document.querySelectorAll("#pann-documenti [data-idx]").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
   document.querySelectorAll("#pann-documenti [data-mio]").forEach(b => b.onclick = () => apriDocumentoMio(b.dataset.mio, miei));
   document.querySelectorAll("#pann-documenti [data-del]").forEach(b => b.onclick = async () => {
@@ -971,18 +1028,73 @@ $("#visore-condividi").onclick = async () => {
 
 /* ---- consigli ---- */
 function renderConsigli(){
-  const visibili = VIAGGIO.consigli.filter(c => !nascosto("consigli", c.tema));
+  const miei = extra().consigli;
+  const visibiliBundle = VIAGGIO.consigli.filter(c => !nascosto("consigli", c.tema));
   const eliminati = (extra().nascosti.consigli || []).length;
-  $("#pann-consigli").innerHTML = visibili.map(c =>
-    '<details class="tema"><summary>' + esc(c.tema) +
-    '<span class="freccia" style="margin-left:auto;color:var(--muto)">' + ICONE.giu + '</span>' +
-    '<button class="btn-elimina" data-del-tema="' + esc(c.tema) + '" aria-label="Elimina">' + ICONE.cestino + '</button></summary>' +
-    '<ul>' + c.punti.map(p => "<li>" + esc(p) + "</li>").join("") + '</ul></details>').join("") +
-    rigaRipristino("consigli", eliminati);
+
+  // temi = quelli del viaggio (visibili) + eventuali temi nuovi creati da Paolo
+  const temi = visibiliBundle.map(c => c.tema);
+  miei.forEach(m => { if(!temi.includes(m.tema)) temi.push(m.tema); });
+
+  const NUOVO = "Nuovo tema...";
+  let html =
+    '<button class="btn-aggiungi">' + ICONE.piu + 'Aggiungi un consiglio mio</button>' +
+    '<div class="form-inline" id="form-consiglio">' +
+      '<select data-campo="tema">' + temi.map(t => '<option>' + esc(t) + '</option>').join("") + '<option>' + NUOVO + '</option></select>' +
+      '<input type="text" placeholder="Nome del nuovo tema (solo se scegli Nuovo tema)" data-campo="nuovoTema" style="display:none">' +
+      '<input type="text" placeholder="Il consiglio" data-campo="testo">' +
+      '<div class="riga-bott"><button class="annulla">Annulla</button><button class="ok">Salva</button></div>' +
+    '</div>';
+
+  html += temi.map(tema => {
+    const bundle = visibiliBundle.find(c => c.tema === tema);
+    const mieiQui = miei.filter(m => m.tema === tema);
+    const temaBundle = !!bundle;
+    return '<details class="tema"><summary>' + esc(tema) + (temaBundle ? "" : '<span class="mio-tag">mio</span>') +
+      '<span class="freccia" style="margin-left:auto;color:var(--muto)">' + ICONE.giu + '</span>' +
+      (temaBundle ? '<button class="btn-elimina" data-del-tema="' + esc(tema) + '" aria-label="Elimina">' + ICONE.cestino + '</button>' : "") +
+      '</summary><ul>' +
+      (bundle ? bundle.punti.map(p => "<li>" + esc(p) + "</li>").join("") : "") +
+      mieiQui.map(m => '<li>' + esc(m.testo) + '<span class="mio-tag">mio</span> ' +
+        '<button class="btn-elimina" style="display:inline;padding:2px 6px;vertical-align:middle" data-del-mio="' + esc(m.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button></li>').join("") +
+      '</ul></details>';
+  }).join("") + rigaRipristino("consigli", eliminati);
+
+  $("#pann-consigli").innerHTML = html;
+
+  const form = $("#form-consiglio");
+  form.previousElementSibling.onclick = () => form.classList.toggle("aperto");
+  const sel = form.querySelector('[data-campo="tema"]');
+  const campoNuovo = form.querySelector('[data-campo="nuovoTema"]');
+  sel.onchange = () => campoNuovo.style.display = sel.value === NUOVO ? "block" : "none";
+  form.querySelector(".annulla").onclick = () => form.classList.remove("aperto");
+  form.querySelector(".ok").onclick = () => {
+    const testo = form.querySelector('[data-campo="testo"]').value.trim();
+    if(!testo) return toast("Scrivi il consiglio");
+    let tema = sel.value;
+    if(tema === NUOVO){
+      tema = campoNuovo.value.trim();
+      if(!tema) return toast("Dai un nome al nuovo tema");
+    }
+    const e = extra();
+    e.consigli.push({id: nuovoId(), tema, testo});
+    salvaExtra(e);
+    renderConsigli();
+    toast("Consiglio aggiunto");
+  };
+
   document.querySelectorAll("#pann-consigli [data-del-tema]").forEach(b => b.onclick = e => {
     e.preventDefault(); e.stopPropagation();
     if(!confirm('Eliminare il tema "' + b.dataset.delTema + '"?')) return;
     nascondi("consigli", b.dataset.delTema);
+    renderConsigli();
+  });
+  document.querySelectorAll("#pann-consigli [data-del-mio]").forEach(b => b.onclick = ev => {
+    ev.preventDefault(); ev.stopPropagation();
+    if(!confirm("Eliminare questo consiglio?")) return;
+    const e = extra();
+    e.consigli = e.consigli.filter(x => x.id !== b.dataset.delMio);
+    salvaExtra(e);
     renderConsigli();
   });
   attivaRipristino("#pann-consigli", renderConsigli);
