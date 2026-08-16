@@ -216,9 +216,55 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
 #visore .barra{display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top) + 8px) 12px 8px; color:#efe7d8}
 #visore .barra b{flex:1; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 #visore .barra button{padding:10px; color:#e2b45e; display:flex}
-#visore .corpo{flex:1; background:#333; overflow:auto; -webkit-overflow-scrolling:touch}
-#visore iframe{width:100%; height:78vh; border:0; background:#fff; display:block}
+#visore .corpo{flex:1; background:#333; overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:env(safe-area-inset-bottom)}
+#visore canvas{display:block; width:100%; margin:0 auto 6px; background:#fff}
 #visore img{max-width:100%; display:block; margin:0 auto}
+.stato-pdf{padding:26px; text-align:center; color:#aaa; font-size:.9rem}
+
+/* bottone aggiungi + form inline */
+.btn-aggiungi{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:13px; border:1.5px dashed var(--bordo); border-radius:14px; color:var(--majorelle);
+  font-weight:600; font-size:.92rem; margin-bottom:10px; background:none;
+}
+.form-inline{background:var(--carta); border:1px solid var(--bordo); border-radius:14px;
+  padding:14px; margin-bottom:10px; display:none}
+.form-inline.aperto{display:block}
+.form-inline input[type=text], .form-inline input[type=url], .form-inline input[type=tel], .form-inline input[type=date]{
+  width:100%; padding:12px; margin-bottom:8px; border:1px solid var(--bordo); border-radius:10px;
+  background:var(--cream); color:var(--ink); font:inherit; font-size:.95rem;
+}
+.form-inline .riga-bott{display:flex; gap:8px}
+.form-inline .riga-bott button{flex:1; padding:12px; border-radius:10px; font-weight:600; font-size:.92rem}
+.form-inline .ok{background:var(--palm); color:#fff}
+.form-inline .annulla{background:var(--sand); color:var(--ink); border:1px solid var(--bordo)}
+.mio-tag{display:inline-block; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--majorelle); color:#fff; border-radius:4px; padding:2px 6px; margin-left:6px; vertical-align:middle}
+.btn-elimina{flex:0 0 auto; padding:8px; color:var(--muto); display:flex; align-self:center}
+.nota-sezione{font-size:.82rem; color:var(--muto); line-height:1.45; margin-bottom:12px}
+
+/* segmented control checklist */
+.segmenti{display:flex; background:var(--carta); border:1px solid var(--bordo); border-radius:12px;
+  padding:3px; margin-bottom:14px}
+.segmenti button{flex:1; padding:9px; border-radius:9px; font-weight:600; font-size:.9rem; color:var(--muto)}
+.segmenti button.attivo{background:var(--terra); color:#fff}
+
+/* legenda mappa */
+.legenda-colori{display:flex; gap:14px; margin-bottom:10px; font-size:.82rem; color:var(--muto)}
+.legenda-colori span{display:flex; align-items:center; gap:6px}
+.legenda-colori i{width:13px; height:13px; border-radius:50%; display:inline-block}
+
+/* salvati */
+.salvato{display:flex; gap:12px; align-items:center; background:var(--carta);
+  border:1px solid var(--bordo); border-radius:14px; padding:13px 15px; margin-bottom:8px}
+.salvato .piattaforma{
+  flex:0 0 auto; width:38px; height:38px; border-radius:10px; display:flex; align-items:center;
+  justify-content:center; font-size:.6rem; font-weight:800; color:#fff; letter-spacing:.02em;
+}
+.salvato .info{flex:1; min-width:0}
+.salvato .info a{display:block; font-size:.93rem; font-weight:600; color:var(--ink);
+  text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.salvato .info small{color:var(--muto); font-size:.78rem}
 .toast{
   position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 24px); transform:translateX(-50%);
   background:var(--night); color:#efe7d8; padding:12px 20px; border-radius:99px; font-size:.88rem;
@@ -275,6 +321,10 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
   <div id="pann-itinerario" class="pannello"></div>
   <div id="pann-mappa" class="pannello">
     <div class="avviso-offline" id="avviso-mappa">Sei offline: mappa schematica. Con la rete torna quella zoomabile.</div>
+    <div class="legenda-colori">
+      <span><i style="background:#c05a2b"></i>tappe del percorso</span>
+      <span><i style="background:#3e6b4f"></i>deviazioni consigliate</span>
+    </div>
     <div id="mappa-vera"></div>
     <div id="mappa-svg"></div>
     <div class="legenda-tappe" id="legenda-tappe"></div>
@@ -283,6 +333,7 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
   <div id="pann-consigli" class="pannello"></div>
   <div id="pann-checklist" class="pannello"></div>
   <div id="pann-contatti" class="pannello"></div>
+  <div id="pann-salvati" class="pannello"></div>
 </div>
 
 <!-- VISORE DOCUMENTO -->
@@ -302,6 +353,8 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
 <div class="toast" id="toast"></div>
 
 <script src="vendor/leaflet.js"></script>
+<script src="vendor/pdf.min.js"></script>
+<input type="file" id="file-doc" accept="application/pdf,image/*" style="display:none">
 <script>
 "use strict";
 
@@ -320,7 +373,10 @@ const ICONE = {
   img:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
   luna:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>',
   gmaps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-  giu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+  giu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  salvati:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>',
+  piu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  cestino:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>'
 };
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
 const GIORNI = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
@@ -379,6 +435,59 @@ async function sbloccoAutomatico(){
   }
 }
 
+/* ============ roba aggiunta da Paolo (vive solo sul telefono) ============ */
+// Voci di testo (checklist, valigia, contatti, salvati) in localStorage;
+// i documenti caricati (blob) in IndexedDB.
+function extra(){
+  const base = {checklist:[], valigia:[], contatti:[], salvati:[]};
+  try{ return Object.assign(base, JSON.parse(localStorage.getItem("trippone-extra-" + VIAGGIO.id) || "{}")); }
+  catch(e){ return base; }
+}
+function salvaExtra(e){ localStorage.setItem("trippone-extra-" + VIAGGIO.id, JSON.stringify(e)); }
+function nuovoId(){ return "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+let _idb = null;
+function apriIdb(){
+  return new Promise((ok, ko) => {
+    if(_idb) return ok(_idb);
+    const r = indexedDB.open("trippone", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("docs", {keyPath:"id"});
+    r.onsuccess = () => { _idb = r.result; ok(_idb); };
+    r.onerror = () => ko(r.error);
+  });
+}
+async function idbDocs(modo, fn){
+  const d = await apriIdb();
+  return new Promise((ok, ko) => {
+    const t = d.transaction("docs", modo);
+    const rich = fn(t.objectStore("docs"));
+    t.oncomplete = () => ok(rich && rich.result);
+    t.onerror = () => ko(t.error);
+  });
+}
+if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+/* form inline riutilizzabile */
+function formInline(campi, onOk){
+  const id = "f" + Math.random().toString(36).slice(2,7);
+  const html = '<div class="form-inline" id="' + id + '">' +
+    campi.map(c => '<input type="' + c.tipo + '" placeholder="' + esc(c.ph) + '" data-campo="' + c.nome + '"' + (c.opz ? "" : " required") + '>').join("") +
+    '<div class="riga-bott"><button class="annulla">Annulla</button><button class="ok">Salva</button></div></div>';
+  return { html,
+    attiva(){
+      const f = document.getElementById(id);
+      f.previousElementSibling.onclick = () => { f.classList.toggle("aperto"); if(f.classList.contains("aperto")) f.querySelector("input").focus(); };
+      f.querySelector(".annulla").onclick = () => f.classList.remove("aperto");
+      f.querySelector(".ok").onclick = () => {
+        const val = {};
+        let manca = false;
+        f.querySelectorAll("input").forEach(i => { val[i.dataset.campo] = i.value.trim(); if(i.required && !i.value.trim()) manca = true; });
+        if(manca) return toast("Compila i campi");
+        onOk(val);
+      };
+    }};
+}
+
 /* ============ navigazione schermi ============ */
 function mostra(id){
   document.querySelectorAll(".schermo").forEach(s => s.classList.remove("attivo"));
@@ -430,8 +539,9 @@ let VIAGGIO = null;
 let mappaInizializzata = false;
 
 const TABS = [
-  ["itinerario","Itinerario"], ["mappa","Mappa"], ["documenti","Documenti"],
-  ["consigli","Consigli"], ["checklist","Checklist"], ["contatti","Contatti"]
+  ["itinerario","Giorni"], ["mappa","Mappa"], ["documenti","Documenti"],
+  ["consigli","Consigli"], ["checklist","Checklist"], ["contatti","Contatti"],
+  ["salvati","Salvati"]
 ];
 
 function apriViaggio(id){
@@ -444,7 +554,8 @@ function apriViaggio(id){
     (k === "checklist" ? '<span class="badge" id="badge-check"></span>' : "") + '</button>').join("");
   document.querySelectorAll(".tab").forEach(t => t.onclick = () => apriTab(t.dataset.tab));
   mappaInizializzata = false;
-  renderItinerario(); renderDocumenti(); renderConsigli(); renderChecklist(); renderContatti();
+  vistaChecklist = "fare";
+  renderItinerario(); renderDocumenti(); renderConsigli(); renderChecklist(); renderContatti(); renderSalvati();
   apriTab("itinerario");
   mostra("#scherm-viaggio");
 }
@@ -500,7 +611,10 @@ function disegnaLeaflet(){
           (grande ? "#c05a2b" : "#3e6b4f") + ';color:#fff;display:flex;align-items:center;justify-content:center;' +
           'font:700 ' + (grande?12:9) + 'px -apple-system,sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + t.n + '</div>',
         iconSize:[grande?26:18, grande?26:18], iconAnchor:[grande?13:9, grande?13:9]});
-      L.marker([t.lat, t.lng], {icon:icona}).addTo(mappa).bindPopup("<b>" + esc(t.nome) + "</b>");
+      L.marker([t.lat, t.lng], {icon:icona}).addTo(mappa).bindPopup(
+        '<b>' + esc(t.nome) + '</b><br>' +
+        '<a href="https://maps.google.com/?q=' + t.lat + ',' + t.lng + '" target="_blank" rel="noopener" ' +
+        'style="display:inline-block;margin-top:6px;padding:7px 12px;background:#4a52c9;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Portami qui</a>');
     });
     mappa.fitBounds(L.latLngBounds(tappe.map(t => [t.lat, t.lng])), {padding:[28,28]});
     mappa.on("load", () => {});
@@ -550,9 +664,23 @@ function disegnaLegenda(){
 }
 
 /* ---- documenti ---- */
-function renderDocumenti(){
+async function renderDocumenti(){
+  const miei = (await idbDocs("readonly", s => s.getAll()) || []).filter(d => d.viaggioId === VIAGGIO.id);
   const cats = [...new Set(VIAGGIO.documenti.map(d => d.categoria))];
-  $("#pann-documenti").innerHTML = cats.map(cat =>
+
+  let html = '<button class="btn-aggiungi" id="btn-agg-doc">' + ICONE.piu + 'Aggiungi documento (PDF o foto)</button>';
+
+  if(miei.length){
+    html += '<div class="cat-doc"><h3 class="sezione">Aggiunti da me</h3>' +
+      miei.map(d =>
+        '<div style="display:flex"><button class="doc" style="flex:1;margin-bottom:8px" data-mio="' + esc(d.id) + '">' +
+        '<span class="icona">' + (d.mime.startsWith("image/") ? ICONE.img : ICONE.pdf) + '</span>' +
+        '<span class="info"><b>' + esc(d.titolo) + '<span class="mio-tag">mio</span></b></span></button>' +
+        '<button class="btn-elimina" data-del-doc="' + esc(d.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button></div>'
+      ).join("") + '</div>';
+  }
+
+  html += cats.map(cat =>
     '<div class="cat-doc"><h3 class="sezione">' + esc(cat) + '</h3>' +
     VIAGGIO.documenti.filter(d => d.categoria === cat).map((d) => {
       const idx = VIAGGIO.documenti.indexOf(d);
@@ -563,7 +691,114 @@ function renderDocumenti(){
         (d.codice ? '<span class="cod">' + esc(d.codice) + '</span>' : "") + '</span>' +
         '<span class="apri">' + ICONE.giu.replace('M6 9l6 6 6-6','M9 6l6 6-6 6') + '</span></button>';
     }).join("") + '</div>').join("");
-  document.querySelectorAll("#pann-documenti .doc").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
+
+  html += '<p class="nota-sezione">I documenti aggiunti da te vivono solo su questo telefono: non finiscono online e si perdono se disinstalli l\'app.</p>';
+
+  $("#pann-documenti").innerHTML = html;
+  document.querySelectorAll("#pann-documenti .doc[data-idx]").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
+  document.querySelectorAll("#pann-documenti .doc[data-mio]").forEach(b => b.onclick = () => apriDocumentoMio(b.dataset.mio, miei));
+  document.querySelectorAll("#pann-documenti [data-del-doc]").forEach(b => b.onclick = async () => {
+    if(!confirm("Eliminare questo documento?")) return;
+    await idbDocs("readwrite", s => s.delete(b.dataset.delDoc));
+    renderDocumenti();
+  });
+  $("#btn-agg-doc").onclick = () => $("#file-doc").click();
+}
+
+$("#file-doc").addEventListener("change", async e => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if(!f) return;
+  if(f.size > 20 * 1024 * 1024) return toast("File troppo grande (max 20 MB)");
+  const titolo = prompt("Nome del documento:", f.name.replace(/\.[^.]+$/, ""));
+  if(titolo === null) return;
+  await idbDocs("readwrite", s => s.put({
+    id: nuovoId(), viaggioId: VIAGGIO.id, titolo: titolo || f.name,
+    mime: f.type || "application/pdf", blob: f, aggiunto: new Date().toISOString().slice(0,10)
+  }));
+  toast("Documento salvato sul telefono");
+  renderDocumenti();
+});
+
+async function apriDocumentoMio(id, miei){
+  const d = miei.find(x => x.id === id);
+  if(!d) return;
+  $("#visore-titolo").textContent = d.titolo;
+  $("#visore").classList.add("aperto");
+  $("#visore-condividi").style.display = "flex";
+  const corpo = $("#visore-corpo");
+  corpo.innerHTML = "";
+  cacheDoc.set("mio-" + id, d.blob);
+  corpo.dataset.file = "mio-" + id;
+  corpo.dataset.nome = d.titolo;
+  await mostraBlob(d.blob, corpo, "");
+}
+
+/* rendering PDF con PDF.js: un solo worker riusato, pagine rese solo quando
+   entrano in vista (le polizze hanno 36 pagine: renderle tutte subito uccide la RAM) */
+let _pdfWorker = null;
+async function mostraBlob(blob, corpo, schedaHTML){
+  if(blob.type.startsWith("image/")){
+    const url = URL.createObjectURL(blob);
+    corpo.innerHTML = schedaHTML + '<img src="' + url + '" alt="">';
+    return;
+  }
+  corpo.innerHTML = schedaHTML + '<div class="stato-pdf">Apro il PDF...</div>';
+  try{
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
+    if(!_pdfWorker) _pdfWorker = new pdfjsLib.PDFWorker();
+    const pdf = await pdfjsLib.getDocument({data: await blob.arrayBuffer(), worker: _pdfWorker}).promise;
+    corpo._pdf = pdf;
+    const larg = corpo.clientWidth || 360;
+    const prima = await pdf.getPage(1);
+    const vpBase = prima.getViewport({scale: 1});
+    const altezzaCss = larg * vpBase.height / vpBase.width;
+
+    corpo.querySelector(".stato-pdf").remove();
+    const segnaposti = [];
+    for(let n = 1; n <= pdf.numPages; n++){
+      const seg = document.createElement("div");
+      seg.dataset.pg = n;
+      seg.style.cssText = "height:" + altezzaCss + "px;background:#fff;margin-bottom:6px";
+      corpo.appendChild(seg);
+      segnaposti.push(seg);
+    }
+    if(pdf.numPages > 1){
+      const info = document.createElement("div");
+      info.className = "stato-pdf";
+      info.textContent = pdf.numPages + " pagine";
+      corpo.insertBefore(info, segnaposti[0]);
+    }
+
+    // una pagina alla volta, in coda, solo quelle vicine alla parte visibile
+    let coda = Promise.resolve();
+    const rendi = seg => {
+      if(seg.dataset.fatta) return;
+      seg.dataset.fatta = "1";
+      coda = coda.then(async () => {
+        if(corpo._pdf !== pdf) return; // visore chiuso nel frattempo
+        const pg = await pdf.getPage(+seg.dataset.pg);
+        const scala = larg / vpBase.width * Math.min(window.devicePixelRatio || 1, 2);
+        const vp = pg.getViewport({scale: scala});
+        const c = document.createElement("canvas");
+        c.width = vp.width; c.height = vp.height;
+        await pg.render({canvasContext: c.getContext("2d"), viewport: vp, intent: "print"}).promise;
+        seg.replaceChildren(c);
+      }).catch(() => { seg.textContent = "Pagina non renderizzata"; });
+    };
+    const rendiVisibili = () => {
+      const sopra = corpo.scrollTop - 900;
+      const sotto = corpo.scrollTop + corpo.clientHeight + 900;
+      segnaposti.forEach(seg => {
+        if(seg.dataset.fatta) return;
+        if(seg.offsetTop < sotto && seg.offsetTop + seg.offsetHeight > sopra) rendi(seg);
+      });
+    };
+    corpo.onscroll = rendiVisibili;
+    rendiVisibili();
+  }catch(e){
+    corpo.innerHTML = schedaHTML + '<div class="stato-pdf" style="color:#e07a48">Non riesco ad aprire questo PDF. Usa il bottone Condividi in alto per aprirlo altrove.</div>';
+  }
 }
 async function apriDocumento(idx){
   const d = VIAGGIO.documenti[idx];
@@ -582,7 +817,7 @@ async function apriDocumento(idx){
   }
   if(!d.file){ corpo.innerHTML = schedaHTML; return; }
 
-  corpo.innerHTML = schedaHTML + '<div style="padding:30px;text-align:center;color:#aaa">Apro il documento...</div>';
+  corpo.innerHTML = schedaHTML + '<div class="stato-pdf">Apro il documento...</div>';
   try{
     let blob = cacheDoc.get(d.file);
     if(!blob){
@@ -590,18 +825,20 @@ async function apriDocumento(idx){
       blob = new Blob([chiaro], {type: d.mime || "application/pdf"});
       cacheDoc.set(d.file, blob);
     }
-    const url = URL.createObjectURL(blob);
-    const vista = d.mime === "image/jpeg"
-      ? '<img src="' + url + '" alt="">'
-      : '<iframe src="' + url + '"></iframe>';
-    corpo.innerHTML = schedaHTML + vista;
     corpo.dataset.file = d.file;
     corpo.dataset.nome = d.nomeOriginale || d.titolo;
+    await mostraBlob(blob, corpo, schedaHTML);
   }catch(e){
-    corpo.innerHTML = schedaHTML + '<div style="padding:30px;text-align:center;color:#e07a48">Documento non disponibile offline: aprilo una volta con la rete, poi resta salvato.</div>';
+    corpo.innerHTML = schedaHTML + '<div class="stato-pdf" style="color:#e07a48">Documento non disponibile offline: aprilo una volta con la rete, poi resta salvato.</div>';
   }
 }
-$("#visore-chiudi").onclick = () => { $("#visore").classList.remove("aperto"); $("#visore-corpo").innerHTML = ""; };
+$("#visore-chiudi").onclick = () => {
+  const corpo = $("#visore-corpo");
+  corpo.onscroll = null;
+  if(corpo._pdf){ corpo._pdf.destroy().catch(() => {}); corpo._pdf = null; }
+  $("#visore").classList.remove("aperto");
+  corpo.innerHTML = "";
+};
 $("#visore-condividi").onclick = async () => {
   const file = $("#visore-corpo").dataset.file;
   const blob = file && cacheDoc.get(file);
@@ -621,33 +858,64 @@ function renderConsigli(){
 
 /* ---- checklist ---- */
 function chiaveCheck(){ return "trippone-check-" + VIAGGIO.id; }
+let vistaChecklist = "fare";
+
+function vociChecklist(vista){
+  const ex = extra();
+  if(vista === "fare")
+    return VIAGGIO.checklist.concat(ex.checklist.map(c => ({...c, mio:true})));
+  return (VIAGGIO.valigia || []).concat(ex.valigia.map(c => ({...c, mio:true})));
+}
+
 function renderChecklist(){
   const stato = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
   const oggi = oggiISO();
-  // da fare per prime le scadenze piu' vicine; le fatte scendono in fondo
-  const voci = VIAGGIO.checklist.slice().sort((a,b) => {
+  const vista = vistaChecklist;
+  const voci = vociChecklist(vista).slice().sort((a,b) => {
     const fa = stato[a.id] ? 1 : 0, fb = stato[b.id] ? 1 : 0;
     if(fa !== fb) return fa - fb;
     return (a.entro || "9999").localeCompare(b.entro || "9999");
   });
   const fatte = voci.filter(c => stato[c.id]).length;
-  const restanti = voci.length - fatte;
   const scadute = voci.filter(c => !stato[c.id] && c.entro && c.entro < oggi).length;
 
+  const fv = formInline(
+    vista === "fare"
+      ? [{tipo:"text", nome:"testo", ph:"Cosa c'e' da fare?"}, {tipo:"date", nome:"entro", ph:"Entro quando (facoltativo)", opz:true}]
+      : [{tipo:"text", nome:"testo", ph:"Cosa mettere in valigia?"}],
+    val => {
+      const e = extra();
+      const voce = {id: nuovoId(), testo: val.testo};
+      if(val.entro) voce.entro = val.entro;
+      e[vista === "fare" ? "checklist" : "valigia"].push(voce);
+      salvaExtra(e);
+      renderChecklist();
+    });
+
   $("#pann-checklist").innerHTML =
-    '<div class="progresso"><b>' + fatte + " su " + voci.length + "</b> fatte" +
+    '<div class="segmenti">' +
+      '<button data-vista="fare"' + (vista === "fare" ? ' class="attivo"' : "") + '>Da fare</button>' +
+      '<button data-vista="valigia"' + (vista === "valigia" ? ' class="attivo"' : "") + '>Valigia</button></div>' +
+    '<div class="progresso"><b>' + fatte + " su " + voci.length + "</b> " + (vista === "fare" ? "fatte" : "in valigia") +
       (scadute ? ' · <span style="color:var(--terra);font-weight:700">' + scadute + (scadute === 1 ? " scaduta" : " scadute") + '</span>' : "") +
-      '<div class="barra-prog"><i style="width:' + Math.round(fatte / voci.length * 100) + '%"></i></div></div>' +
+      '<div class="barra-prog"><i style="width:' + (voci.length ? Math.round(fatte / voci.length * 100) : 0) + '%"></i></div></div>' +
+    '<button class="btn-aggiungi">' + ICONE.piu + (vista === "fare" ? "Aggiungi una cosa da fare" : "Aggiungi alla valigia") + '</button>' +
+    fv.html +
     voci.map(c => {
       const fatta = !!stato[c.id];
       const inRitardo = !fatta && c.entro && c.entro < oggi;
       return '<div class="check' + (fatta ? " fatta" : "") + (inRitardo ? " ritardo" : "") + '">' +
         '<input type="checkbox" id="ck-' + esc(c.id) + '" ' + (fatta ? "checked" : "") + '>' +
-        '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) +
+        '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) + (c.mio ? '<span class="mio-tag">mia</span>' : "") +
         (c.entro ? '<span class="entro">' + (inRitardo ? "SCADUTA il " : "entro ") + dataIt(c.entro) + '</span>' : "") +
-        '</label></div>';
+        '</label>' +
+        (c.mio ? '<button class="btn-elimina" data-del-voce="' + esc(c.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button>' : "") +
+        '</div>';
     }).join("");
 
+  document.querySelectorAll("#pann-checklist .segmenti button").forEach(b =>
+    b.onclick = () => { vistaChecklist = b.dataset.vista; renderChecklist(); });
+  fv.attiva();
   voci.forEach(c => {
     $("#ck-" + CSS.escape(c.id)).onchange = e => {
       const s = JSON.parse(localStorage.getItem(chiaveCheck()) || "{}");
@@ -656,17 +924,92 @@ function renderChecklist(){
       renderChecklist();
     };
   });
+  document.querySelectorAll("#pann-checklist [data-del-voce]").forEach(b => b.onclick = () => {
+    if(!confirm("Eliminare questa voce?")) return;
+    const e = extra();
+    const lista = vista === "fare" ? "checklist" : "valigia";
+    e[lista] = e[lista].filter(x => x.id !== b.dataset.delVoce);
+    salvaExtra(e);
+    renderChecklist();
+  });
 
+  // il pallino conta solo le cose da fare (non la valigia)
+  const daFare = vociChecklist("fare");
+  const restanti = daFare.filter(c => !stato[c.id]).length;
   const badge = $("#badge-check");
   if(badge){ badge.textContent = restanti || ""; badge.style.display = restanti ? "flex" : "none"; }
 }
 
 /* ---- contatti ---- */
 function renderContatti(){
-  $("#pann-contatti").innerHTML = VIAGGIO.contatti.map(c =>
-    '<div class="contatto"><div class="info"><b>' + esc(c.nome) + '</b>' +
+  const miei = extra().contatti;
+  const fc = formInline(
+    [{tipo:"text", nome:"nome", ph:"Nome"}, {tipo:"tel", nome:"tel", ph:"Numero (con prefisso, es. +212...)"}, {tipo:"text", nome:"note", ph:"Nota (facoltativa)", opz:true}],
+    val => {
+      const e = extra();
+      e.contatti.push({id: nuovoId(), nome: val.nome, tel: val.tel, note: val.note});
+      salvaExtra(e);
+      renderContatti();
+    });
+  const rigaContatto = (c, mio) =>
+    '<div class="contatto"><div class="info"><b>' + esc(c.nome) + (mio ? '<span class="mio-tag">mio</span>' : "") + '</b>' +
     '<small>' + esc(c.tel) + (c.note ? " · " + esc(c.note) : "") + '</small></div>' +
-    '<a class="chiama" href="tel:' + esc(c.tel) + '" aria-label="Chiama">' + ICONE.tel + '</a></div>').join("");
+    (mio ? '<button class="btn-elimina" data-del-cont="' + esc(c.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button>' : "") +
+    '<a class="chiama" href="tel:' + esc(c.tel) + '" aria-label="Chiama">' + ICONE.tel + '</a></div>';
+
+  $("#pann-contatti").innerHTML =
+    '<button class="btn-aggiungi">' + ICONE.piu + 'Aggiungi contatto</button>' + fc.html +
+    miei.map(c => rigaContatto(c, true)).join("") +
+    VIAGGIO.contatti.map(c => rigaContatto(c, false)).join("");
+  fc.attiva();
+  document.querySelectorAll("#pann-contatti [data-del-cont]").forEach(b => b.onclick = () => {
+    if(!confirm("Eliminare questo contatto?")) return;
+    const e = extra();
+    e.contatti = e.contatti.filter(x => x.id !== b.dataset.delCont);
+    salvaExtra(e);
+    renderContatti();
+  });
+}
+
+/* ---- salvati (link da TikTok / Instagram / web) ---- */
+function piattaformaDi(url){
+  if(/tiktok\./i.test(url)) return ["TikTok", "#010101"];
+  if(/instagram\./i.test(url)) return ["IG", "#c13584"];
+  if(/youtu/i.test(url)) return ["YT", "#cc0000"];
+  if(/maps\./i.test(url)) return ["Maps", "#3e6b4f"];
+  return ["Link", "#4a52c9"];
+}
+function renderSalvati(){
+  const salvati = extra().salvati;
+  const fs = formInline(
+    [{tipo:"url", nome:"url", ph:"Incolla qui il link"}, {tipo:"text", nome:"titolo", ph:"Titolo (es. Riad visto su TikTok)", opz:true}],
+    val => {
+      if(!/^https?:\/\//i.test(val.url)) return toast("Il link deve iniziare con http");
+      const e = extra();
+      e.salvati.unshift({id: nuovoId(), url: val.url, titolo: val.titolo});
+      salvaExtra(e);
+      renderSalvati();
+      toast("Salvato");
+    });
+  $("#pann-salvati").innerHTML =
+    '<p class="nota-sezione">Video e posti trovati sui social: nell\'app che li mostra tocca Condividi, Copia link, poi incollalo qui. Si riaprono con un tocco nell\'app giusta (serve la rete).</p>' +
+    '<button class="btn-aggiungi">' + ICONE.piu + 'Aggiungi link</button>' + fs.html +
+    (salvati.length ? salvati.map(s => {
+      const [nome, colore] = piattaformaDi(s.url);
+      let dominio = ""; try{ dominio = new URL(s.url).hostname.replace("www.",""); }catch(e){}
+      return '<div class="salvato"><span class="piattaforma" style="background:' + colore + '">' + nome + '</span>' +
+        '<span class="info"><a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.titolo || dominio || s.url) + '</a>' +
+        '<small>' + esc(dominio) + '</small></span>' +
+        '<button class="btn-elimina" data-del-salv="' + esc(s.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button></div>';
+    }).join("") : '<p style="color:var(--muto);text-align:center;padding:20px 0">Ancora niente: incolla il primo link.</p>');
+  fs.attiva();
+  document.querySelectorAll("#pann-salvati [data-del-salv]").forEach(b => b.onclick = () => {
+    if(!confirm("Eliminare questo link?")) return;
+    const e = extra();
+    e.salvati = e.salvati.filter(x => x.id !== b.dataset.delSalv);
+    salvaExtra(e);
+    renderSalvati();
+  });
 }
 
 /* ============ offline warm-up ============ */

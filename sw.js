@@ -4,7 +4,7 @@
 // dentro una versione non cambiano, e a ogni deploy la versione ruota e la cache riparte.
 // NON aggiornare CACHE_VERSION a mano: lo fa deploy.sh.
 
-const CACHE_VERSION = "trippone-v11";
+const CACHE_VERSION = "trippone-v12";
 const FILE = [
   "./",
   "./index.html",
@@ -14,6 +14,8 @@ const FILE = [
   "./apple-touch-icon.png",
   "./vendor/leaflet.js",
   "./vendor/leaflet.css",
+  "./vendor/pdf.min.js",
+  "./vendor/pdf.worker.min.js",
   "./dati.enc"
 ];
 
