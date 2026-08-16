@@ -164,16 +164,33 @@ h3.sezione{margin:26px 0 10px; font-size:.8rem; letter-spacing:.14em; text-trans
 /* documenti */
 .cat-doc{margin-bottom:8px}
 .doc{
-  width:100%; text-align:left; background:var(--carta); border:1px solid var(--bordo);
-  border-radius:14px; padding:14px 16px; margin-bottom:8px; display:flex; gap:12px; align-items:center;
+  background:var(--carta); border:1px solid var(--bordo);
+  border-radius:14px; margin-bottom:8px; display:flex; align-items:stretch;
 }
+.doc .doc-apri{flex:1; min-width:0; display:flex; gap:12px; align-items:center; padding:14px 0 14px 16px; text-align:left}
 .doc .icona{flex:0 0 auto; width:38px; height:38px; border-radius:10px; background:var(--sand);
   display:flex; align-items:center; justify-content:center; color:var(--terra)}
 .doc .icona svg{width:19px; height:19px}
 .doc .info{flex:1; min-width:0}
-.doc .info b{display:block; font-size:.93rem}
-.doc .info .cod{font-family:ui-monospace, Menlo, monospace; font-size:.82rem; color:var(--terra); font-weight:700}
-.doc .apri{color:var(--muto)}
+.doc .info b{display:block; font-size:.93rem; overflow-wrap:anywhere}
+.doc .info .cod{font-family:ui-monospace, Menlo, monospace; font-size:.82rem; color:var(--terra); font-weight:700; overflow-wrap:anywhere}
+.doc .btn-elimina{padding:0 14px}
+.doc .apri{color:var(--muto); padding-right:12px; display:flex; align-items:center}
+
+/* chip filtri categorie */
+.chips-cat{display:flex; gap:6px; overflow-x:auto; padding-bottom:10px; margin-bottom:4px; scrollbar-width:none}
+.chips-cat::-webkit-scrollbar{display:none}
+.chip-cat{
+  flex:0 0 auto; display:flex; align-items:center; gap:6px; padding:8px 13px;
+  border:1px solid var(--bordo); border-radius:99px; background:var(--carta);
+  font-size:.82rem; font-weight:600; color:var(--muto);
+}
+.chip-cat svg{width:15px; height:15px}
+.chip-cat.attivo{background:var(--terra); color:#fff; border-color:var(--terra)}
+.form-inline select{
+  width:100%; padding:12px; margin-bottom:8px; border:1px solid var(--bordo); border-radius:10px;
+  background:var(--cream); color:var(--ink); font:inherit; font-size:.95rem; -webkit-appearance:none;
+}
 
 /* consigli */
 .tema{background:var(--carta); border:1px solid var(--bordo); border-radius:16px; margin-bottom:10px; overflow:hidden}
@@ -376,8 +393,18 @@ const ICONE = {
   giu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
   salvati:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>',
   piu:'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
-  cestino:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>'
+  cestino:'<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/></svg>',
+  aereo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+  letto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16M2 8h18a2 2 0 012 2v10M2 17h20M6 8v9"/></svg>',
+  auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-6l2-5h12l4 5v6h-2M7 17h10M5 11h16"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>',
+  scudo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  stella:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></svg>',
+  cartella:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>'
 };
+const CATEGORIE = [
+  ["Viaggi", "aereo"], ["Alloggi", "letto"], ["Noleggi", "auto"],
+  ["Assicurazioni", "scudo"], ["Attività", "stella"], ["Altro", "cartella"]
+];
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
 const GIORNI = ["domenica","lunedì","martedì","mercoledì","giovedì","venerdì","sabato"];
 function dataIt(iso){ const d = new Date(iso + "T12:00:00");
@@ -439,9 +466,35 @@ async function sbloccoAutomatico(){
 // Voci di testo (checklist, valigia, contatti, salvati) in localStorage;
 // i documenti caricati (blob) in IndexedDB.
 function extra(){
-  const base = {checklist:[], valigia:[], contatti:[], salvati:[]};
-  try{ return Object.assign(base, JSON.parse(localStorage.getItem("trippone-extra-" + VIAGGIO.id) || "{}")); }
+  const base = {checklist:[], valigia:[], contatti:[], salvati:[], nascosti:{}};
+  try{
+    const e = Object.assign(base, JSON.parse(localStorage.getItem("trippone-extra-" + VIAGGIO.id) || "{}"));
+    e.nascosti = e.nascosti || {};
+    return e;
+  }
   catch(e){ return base; }
+}
+/* elementi del viaggio "eliminati" da Paolo: si nascondono, non si toccano i dati */
+function nascosto(sezione, id){ return (extra().nascosti[sezione] || []).includes(id); }
+function nascondi(sezione, id){
+  const e = extra();
+  e.nascosti[sezione] = (e.nascosti[sezione] || []).concat(id);
+  salvaExtra(e);
+}
+function ripristina(sezione){
+  const e = extra();
+  delete e.nascosti[sezione];
+  salvaExtra(e);
+}
+function rigaRipristino(sezione, quanti, dopo){
+  if(!quanti) return "";
+  return '<p class="nota-sezione" style="text-align:center"><button data-ripristina="' + sezione + '" style="color:var(--majorelle);font-weight:600">' +
+    quanti + (quanti === 1 ? " elemento eliminato: ripristina" : " elementi eliminati: ripristinali") + '</button></p>';
+}
+function attivaRipristino(pannello, rirender){
+  document.querySelectorAll(pannello + " [data-ripristina]").forEach(b => b.onclick = () => {
+    ripristina(b.dataset.ripristina); rirender();
+  });
 }
 function salvaExtra(e){ localStorage.setItem("trippone-extra-" + VIAGGIO.id, JSON.stringify(e)); }
 function nuovoId(){ return "u" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
@@ -471,7 +524,12 @@ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().c
 function formInline(campi, onOk){
   const id = "f" + Math.random().toString(36).slice(2,7);
   const html = '<div class="form-inline" id="' + id + '">' +
-    campi.map(c => '<input type="' + c.tipo + '" placeholder="' + esc(c.ph) + '" data-campo="' + c.nome + '"' + (c.opz ? "" : " required") + '>').join("") +
+    campi.map(c => {
+      if(c.tipo === "select")
+        return '<select data-campo="' + c.nome + '">' +
+          c.opzioni.map(o => '<option value="' + esc(o) + '">' + esc(o) + '</option>').join("") + '</select>';
+      return '<input type="' + c.tipo + '" placeholder="' + esc(c.ph) + '" data-campo="' + c.nome + '"' + (c.opz ? "" : " required") + '>';
+    }).join("") +
     '<div class="riga-bott"><button class="annulla">Annulla</button><button class="ok">Salva</button></div></div>';
   return { html,
     attiva(){
@@ -481,7 +539,7 @@ function formInline(campi, onOk){
       f.querySelector(".ok").onclick = () => {
         const val = {};
         let manca = false;
-        f.querySelectorAll("input").forEach(i => { val[i.dataset.campo] = i.value.trim(); if(i.required && !i.value.trim()) manca = true; });
+        f.querySelectorAll("input,select").forEach(i => { val[i.dataset.campo] = i.value.trim(); if(i.required && !i.value.trim()) manca = true; });
         if(manca) return toast("Compila i campi");
         onOk(val);
       };
@@ -587,6 +645,8 @@ function renderItinerario(){
 }
 
 /* ---- mappa ---- */
+function tappeVisibili(){ return VIAGGIO.tappe.filter(t => !nascosto("tappe", String(t.n))); }
+let mappaLeaflet = null;
 function preparaMappa(){
   const online = navigator.onLine;
   $("#avviso-mappa").style.display = online ? "none" : "block";
@@ -594,14 +654,22 @@ function preparaMappa(){
   $("#mappa-svg").style.display = online ? "none" : "block";
   if(!online) disegnaSvg();
   else if(!mappaInizializzata){ mappaInizializzata = true; setTimeout(disegnaLeaflet, 60); }
-  if(!$("#legenda-tappe").innerHTML) disegnaLegenda();
+  disegnaLegenda();
+}
+function ridisegnaMappe(){
+  if(mappaLeaflet){ mappaLeaflet.remove(); mappaLeaflet = null; }
+  mappaInizializzata = false;
+  const sv = $("#mappa-svg");
+  sv.dataset.fatto = ""; sv.innerHTML = "";
+  preparaMappa();
 }
 function disegnaLeaflet(){
   try{
     const mappa = L.map("mappa-vera", {scrollWheelZoom:true, tap:true});
+    mappaLeaflet = mappa;
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
       {attribution:'&copy; OpenStreetMap, &copy; CARTO', maxZoom:18}).addTo(mappa);
-    const tappe = VIAGGIO.tappe;
+    const tappe = tappeVisibili();
     const linea = tappe.filter(t => t.tipo === "tappa").map(t => [t.lat, t.lng]);
     L.polyline(linea, {color:"#c05a2b", weight:3, dashArray:"7 7", opacity:.85}).addTo(mappa);
     tappe.forEach(t => {
@@ -628,7 +696,7 @@ function disegnaSvg(){
   const cont = $("#mappa-svg");
   if(cont.dataset.fatto) return;
   cont.dataset.fatto = "1";
-  const tappe = VIAGGIO.tappe;
+  const tappe = tappeVisibili();
   // proiezione equirettangolare dentro il viewBox
   const lats = tappe.map(t => t.lat), lngs = tappe.map(t => t.lng);
   const costaAtl = [[35.77,-5.93],[35.17,-6.15],[34.03,-6.84],[33.60,-7.63],[33.25,-8.50],[32.30,-9.24],[31.51,-9.77],[30.90,-9.83],[30.40,-9.61],[29.70,-9.75],[28.90,-10.5]];
@@ -657,67 +725,112 @@ function disegnaSvg(){
   cont.innerHTML = s;
 }
 function disegnaLegenda(){
-  $("#legenda-tappe").innerHTML = VIAGGIO.tappe.map(t =>
+  const eliminati = (extra().nascosti.tappe || []).length;
+  $("#legenda-tappe").innerHTML = tappeVisibili().map(t =>
     '<div class="voce' + (t.tipo === "poi" ? " poi" : "") + '"><span class="pallino">' + t.n + '</span>' +
-    '<span>' + esc(t.nome) + '</span>' +
-    '<a href="https://maps.google.com/?q=' + t.lat + ',' + t.lng + '" target="_blank" rel="noopener" aria-label="Apri in Google Maps">' + ICONE.gmaps + '</a></div>').join("");
+    '<span style="flex:1;min-width:0">' + esc(t.nome) + '</span>' +
+    '<button class="btn-elimina" data-del-tappa="' + t.n + '" aria-label="Elimina">' + ICONE.cestino + '</button>' +
+    '<a style="margin-left:0" href="https://maps.google.com/?q=' + t.lat + ',' + t.lng + '" target="_blank" rel="noopener" aria-label="Apri in Google Maps">' + ICONE.gmaps + '</a></div>').join("") +
+    rigaRipristino("tappe", eliminati);
+  document.querySelectorAll("#legenda-tappe [data-del-tappa]").forEach(b => b.onclick = () => {
+    if(!confirm("Togliere questa tappa dalla mappa?")) return;
+    nascondi("tappe", b.dataset.delTappa);
+    ridisegnaMappe();
+  });
+  attivaRipristino("#pann-mappa", ridisegnaMappe);
 }
 
 /* ---- documenti ---- */
+let filtroCat = null;      // categoria selezionata dai chip (null = tutte)
+let fileInAttesa = null;   // file scelto, in attesa di nome+categoria
+
 async function renderDocumenti(){
   const miei = (await idbDocs("readonly", s => s.getAll()) || []).filter(d => d.viaggioId === VIAGGIO.id);
-  const cats = [...new Set(VIAGGIO.documenti.map(d => d.categoria))];
+  const eliminati = (extra().nascosti.documenti || []).length;
+  const bundleVisibili = VIAGGIO.documenti.filter(d => !nascosto("documenti", d.id));
 
-  let html = '<button class="btn-aggiungi" id="btn-agg-doc">' + ICONE.piu + 'Aggiungi documento (PDF o foto)</button>';
+  // tutte le voci insieme, per categoria (i miei dentro la loro categoria)
+  const tutte = bundleVisibili.map(d => ({...d, mio: false}))
+    .concat(miei.map(d => ({...d, mio: true, categoria: d.categoria || "Altro"})));
+  const contaPer = Object.fromEntries(CATEGORIE.map(([c]) => [c, tutte.filter(d => d.categoria === c).length]));
 
-  if(miei.length){
-    html += '<div class="cat-doc"><h3 class="sezione">Aggiunti da me</h3>' +
-      miei.map(d =>
-        '<div style="display:flex"><button class="doc" style="flex:1;margin-bottom:8px" data-mio="' + esc(d.id) + '">' +
-        '<span class="icona">' + (d.mime.startsWith("image/") ? ICONE.img : ICONE.pdf) + '</span>' +
-        '<span class="info"><b>' + esc(d.titolo) + '<span class="mio-tag">mio</span></b></span></button>' +
-        '<button class="btn-elimina" data-del-doc="' + esc(d.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button></div>'
-      ).join("") + '</div>';
-  }
+  let html =
+    '<div class="chips-cat">' +
+      '<button class="chip-cat' + (filtroCat === null ? " attivo" : "") + '" data-cat="">Tutti</button>' +
+      CATEGORIE.filter(([c]) => contaPer[c]).map(([c, ic]) =>
+        '<button class="chip-cat' + (filtroCat === c ? " attivo" : "") + '" data-cat="' + esc(c) + '">' +
+        ICONE[ic] + esc(c) + ' ' + contaPer[c] + '</button>').join("") +
+    '</div>' +
+    '<button class="btn-aggiungi" id="btn-agg-doc">' + ICONE.piu + 'Aggiungi documento (PDF o foto)</button>' +
+    '<div class="form-inline" id="form-doc">' +
+      '<p class="nota-sezione" id="form-doc-nomefile"></p>' +
+      '<input type="text" placeholder="Nome del documento" data-campo="titolo" required>' +
+      '<select data-campo="categoria">' + CATEGORIE.map(([c]) => '<option' + (c === "Altro" ? " selected" : "") + '>' + esc(c) + '</option>').join("") + '</select>' +
+      '<div class="riga-bott"><button class="annulla">Annulla</button><button class="ok">Salva</button></div>' +
+    '</div>';
 
-  html += cats.map(cat =>
+  const rigaDoc = d => {
+    const icona = d.mio ? (d.mime.startsWith("image/") ? ICONE.img : ICONE.pdf)
+                        : (d.file ? (d.mime === "image/jpeg" ? ICONE.img : ICONE.pdf) : ICONE.scheda);
+    const rif = d.mio ? 'data-mio="' + esc(d.id) + '"' : 'data-idx="' + VIAGGIO.documenti.indexOf(VIAGGIO.documenti.find(x => x.id === d.id)) + '"';
+    return '<div class="doc"><button class="doc-apri" ' + rif + '>' +
+      '<span class="icona">' + icona + '</span>' +
+      '<span class="info"><b>' + esc(d.titolo) + (d.mio ? '<span class="mio-tag">mio</span>' : "") + '</b>' +
+      (d.codice ? '<span class="cod">' + esc(d.codice) + '</span>' : "") + '</span></button>' +
+      '<button class="btn-elimina" data-del="' + esc(d.id) + '" data-tipo="' + (d.mio ? "mio" : "bundle") + '" aria-label="Elimina">' + ICONE.cestino + '</button></div>';
+  };
+
+  const daMostrare = filtroCat ? [filtroCat] : CATEGORIE.map(([c]) => c);
+  html += daMostrare.filter(c => contaPer[c]).map(cat =>
     '<div class="cat-doc"><h3 class="sezione">' + esc(cat) + '</h3>' +
-    VIAGGIO.documenti.filter(d => d.categoria === cat).map((d) => {
-      const idx = VIAGGIO.documenti.indexOf(d);
-      const icona = d.file ? (d.mime === "image/jpeg" ? ICONE.img : ICONE.pdf) : ICONE.scheda;
-      return '<button class="doc" data-idx="' + idx + '">' +
-        '<span class="icona">' + icona + '</span>' +
-        '<span class="info"><b>' + esc(d.titolo) + '</b>' +
-        (d.codice ? '<span class="cod">' + esc(d.codice) + '</span>' : "") + '</span>' +
-        '<span class="apri">' + ICONE.giu.replace('M6 9l6 6 6-6','M9 6l6 6-6 6') + '</span></button>';
-    }).join("") + '</div>').join("");
+    tutte.filter(d => d.categoria === cat).map(rigaDoc).join("") + '</div>').join("");
 
-  html += '<p class="nota-sezione">I documenti aggiunti da te vivono solo su questo telefono: non finiscono online e si perdono se disinstalli l\'app.</p>';
+  html += rigaRipristino("documenti", eliminati);
+  html += '<p class="nota-sezione">I documenti aggiunti da te vivono solo su questo telefono. Quelli eliminati si possono sempre ripristinare.</p>';
 
   $("#pann-documenti").innerHTML = html;
-  document.querySelectorAll("#pann-documenti .doc[data-idx]").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
-  document.querySelectorAll("#pann-documenti .doc[data-mio]").forEach(b => b.onclick = () => apriDocumentoMio(b.dataset.mio, miei));
-  document.querySelectorAll("#pann-documenti [data-del-doc]").forEach(b => b.onclick = async () => {
+
+  document.querySelectorAll("#pann-documenti .chip-cat").forEach(b =>
+    b.onclick = () => { filtroCat = b.dataset.cat || null; renderDocumenti(); });
+  document.querySelectorAll("#pann-documenti [data-idx]").forEach(b => b.onclick = () => apriDocumento(+b.dataset.idx));
+  document.querySelectorAll("#pann-documenti [data-mio]").forEach(b => b.onclick = () => apriDocumentoMio(b.dataset.mio, miei));
+  document.querySelectorAll("#pann-documenti [data-del]").forEach(b => b.onclick = async () => {
     if(!confirm("Eliminare questo documento?")) return;
-    await idbDocs("readwrite", s => s.delete(b.dataset.delDoc));
+    if(b.dataset.tipo === "mio") await idbDocs("readwrite", s => s.delete(b.dataset.del));
+    else nascondi("documenti", b.dataset.del);
     renderDocumenti();
   });
+  attivaRipristino("#pann-documenti", renderDocumenti);
   $("#btn-agg-doc").onclick = () => $("#file-doc").click();
+
+  const form = $("#form-doc");
+  form.querySelector(".annulla").onclick = () => { fileInAttesa = null; form.classList.remove("aperto"); };
+  form.querySelector(".ok").onclick = async () => {
+    if(!fileInAttesa) return;
+    const titolo = form.querySelector('[data-campo="titolo"]').value.trim();
+    if(!titolo) return toast("Dagli un nome");
+    const categoria = form.querySelector('[data-campo="categoria"]').value;
+    await idbDocs("readwrite", s => s.put({
+      id: nuovoId(), viaggioId: VIAGGIO.id, titolo, categoria,
+      mime: fileInAttesa.type || "application/pdf", blob: fileInAttesa
+    }));
+    fileInAttesa = null;
+    toast("Salvato in " + categoria);
+    renderDocumenti();
+  };
 }
 
-$("#file-doc").addEventListener("change", async e => {
+$("#file-doc").addEventListener("change", e => {
   const f = e.target.files[0];
   e.target.value = "";
   if(!f) return;
   if(f.size > 20 * 1024 * 1024) return toast("File troppo grande (max 20 MB)");
-  const titolo = prompt("Nome del documento:", f.name.replace(/\.[^.]+$/, ""));
-  if(titolo === null) return;
-  await idbDocs("readwrite", s => s.put({
-    id: nuovoId(), viaggioId: VIAGGIO.id, titolo: titolo || f.name,
-    mime: f.type || "application/pdf", blob: f, aggiunto: new Date().toISOString().slice(0,10)
-  }));
-  toast("Documento salvato sul telefono");
-  renderDocumenti();
+  fileInAttesa = f;
+  const form = $("#form-doc");
+  $("#form-doc-nomefile").textContent = "File: " + f.name;
+  form.querySelector('[data-campo="titolo"]').value = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+  form.classList.add("aperto");
+  form.scrollIntoView({block: "center"});
 });
 
 async function apriDocumentoMio(id, miei){
@@ -778,7 +891,8 @@ async function mostraBlob(blob, corpo, schedaHTML){
       coda = coda.then(async () => {
         if(corpo._pdf !== pdf) return; // visore chiuso nel frattempo
         const pg = await pdf.getPage(+seg.dataset.pg);
-        const scala = larg / vpBase.width * Math.min(window.devicePixelRatio || 1, 2);
+        // risoluzione nativa dello schermo (iPhone = 3x): qualita' piena
+        const scala = larg / vpBase.width * Math.min(window.devicePixelRatio || 1, 3);
         const vp = pg.getViewport({scale: scala});
         const c = document.createElement("canvas");
         c.width = vp.width; c.height = vp.height;
@@ -790,8 +904,14 @@ async function mostraBlob(blob, corpo, schedaHTML){
       const sopra = corpo.scrollTop - 900;
       const sotto = corpo.scrollTop + corpo.clientHeight + 900;
       segnaposti.forEach(seg => {
-        if(seg.dataset.fatta) return;
-        if(seg.offsetTop < sotto && seg.offsetTop + seg.offsetHeight > sopra) rendi(seg);
+        const vicina = seg.offsetTop < sotto && seg.offsetTop + seg.offsetHeight > sopra;
+        if(!seg.dataset.fatta && vicina) rendi(seg);
+        // libera la memoria delle pagine molto lontane (a piena risoluzione pesano)
+        if(seg.dataset.fatta === "1" && !vicina && seg.firstChild &&
+           Math.abs(seg.offsetTop - corpo.scrollTop) > 4000){
+          seg.replaceChildren();
+          delete seg.dataset.fatta;
+        }
       });
     };
     corpo.onscroll = rendiVisibili;
@@ -851,9 +971,21 @@ $("#visore-condividi").onclick = async () => {
 
 /* ---- consigli ---- */
 function renderConsigli(){
-  $("#pann-consigli").innerHTML = VIAGGIO.consigli.map(c =>
-    '<details class="tema"><summary>' + esc(c.tema) + '<span class="freccia" style="margin-left:auto;color:var(--muto)">' + ICONE.giu + '</span></summary>' +
-    '<ul>' + c.punti.map(p => "<li>" + esc(p) + "</li>").join("") + '</ul></details>').join("");
+  const visibili = VIAGGIO.consigli.filter(c => !nascosto("consigli", c.tema));
+  const eliminati = (extra().nascosti.consigli || []).length;
+  $("#pann-consigli").innerHTML = visibili.map(c =>
+    '<details class="tema"><summary>' + esc(c.tema) +
+    '<span class="freccia" style="margin-left:auto;color:var(--muto)">' + ICONE.giu + '</span>' +
+    '<button class="btn-elimina" data-del-tema="' + esc(c.tema) + '" aria-label="Elimina">' + ICONE.cestino + '</button></summary>' +
+    '<ul>' + c.punti.map(p => "<li>" + esc(p) + "</li>").join("") + '</ul></details>').join("") +
+    rigaRipristino("consigli", eliminati);
+  document.querySelectorAll("#pann-consigli [data-del-tema]").forEach(b => b.onclick = e => {
+    e.preventDefault(); e.stopPropagation();
+    if(!confirm('Eliminare il tema "' + b.dataset.delTema + '"?')) return;
+    nascondi("consigli", b.dataset.delTema);
+    renderConsigli();
+  });
+  attivaRipristino("#pann-consigli", renderConsigli);
 }
 
 /* ---- checklist ---- */
@@ -862,9 +994,10 @@ let vistaChecklist = "fare";
 
 function vociChecklist(vista){
   const ex = extra();
-  if(vista === "fare")
-    return VIAGGIO.checklist.concat(ex.checklist.map(c => ({...c, mio:true})));
-  return (VIAGGIO.valigia || []).concat(ex.valigia.map(c => ({...c, mio:true})));
+  const sezione = vista === "fare" ? "checklist" : "valigia";
+  const bundle = (vista === "fare" ? VIAGGIO.checklist : (VIAGGIO.valigia || []))
+    .filter(c => !nascosto(sezione, c.id));
+  return bundle.concat(ex[sezione].map(c => ({...c, mio:true})));
 }
 
 function renderChecklist(){
@@ -909,9 +1042,10 @@ function renderChecklist(){
         '<label for="ck-' + esc(c.id) + '">' + esc(c.testo) + (c.mio ? '<span class="mio-tag">mia</span>' : "") +
         (c.entro ? '<span class="entro">' + (inRitardo ? "SCADUTA il " : "entro ") + dataIt(c.entro) + '</span>' : "") +
         '</label>' +
-        (c.mio ? '<button class="btn-elimina" data-del-voce="' + esc(c.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button>' : "") +
+        '<button class="btn-elimina" data-del-voce="' + esc(c.id) + '" data-tipo="' + (c.mio ? "mia" : "bundle") + '" aria-label="Elimina">' + ICONE.cestino + '</button>' +
         '</div>';
-    }).join("");
+    }).join("") +
+    rigaRipristino(vista === "fare" ? "checklist" : "valigia", (extra().nascosti[vista === "fare" ? "checklist" : "valigia"] || []).length);
 
   document.querySelectorAll("#pann-checklist .segmenti button").forEach(b =>
     b.onclick = () => { vistaChecklist = b.dataset.vista; renderChecklist(); });
@@ -926,12 +1060,15 @@ function renderChecklist(){
   });
   document.querySelectorAll("#pann-checklist [data-del-voce]").forEach(b => b.onclick = () => {
     if(!confirm("Eliminare questa voce?")) return;
-    const e = extra();
     const lista = vista === "fare" ? "checklist" : "valigia";
-    e[lista] = e[lista].filter(x => x.id !== b.dataset.delVoce);
-    salvaExtra(e);
+    if(b.dataset.tipo === "mia"){
+      const e = extra();
+      e[lista] = e[lista].filter(x => x.id !== b.dataset.delVoce);
+      salvaExtra(e);
+    } else nascondi(lista, b.dataset.delVoce);
     renderChecklist();
   });
+  attivaRipristino("#pann-checklist", renderChecklist);
 
   // il pallino conta solo le cose da fare (non la valigia)
   const daFare = vociChecklist("fare");
@@ -954,21 +1091,26 @@ function renderContatti(){
   const rigaContatto = (c, mio) =>
     '<div class="contatto"><div class="info"><b>' + esc(c.nome) + (mio ? '<span class="mio-tag">mio</span>' : "") + '</b>' +
     '<small>' + esc(c.tel) + (c.note ? " · " + esc(c.note) : "") + '</small></div>' +
-    (mio ? '<button class="btn-elimina" data-del-cont="' + esc(c.id) + '" aria-label="Elimina">' + ICONE.cestino + '</button>' : "") +
+    '<button class="btn-elimina" data-del-cont="' + esc(c.id) + '" data-tipo="' + (mio ? "mio" : "bundle") + '" aria-label="Elimina">' + ICONE.cestino + '</button>' +
     '<a class="chiama" href="tel:' + esc(c.tel) + '" aria-label="Chiama">' + ICONE.tel + '</a></div>';
 
+  const eliminati = (extra().nascosti.contatti || []).length;
   $("#pann-contatti").innerHTML =
     '<button class="btn-aggiungi">' + ICONE.piu + 'Aggiungi contatto</button>' + fc.html +
     miei.map(c => rigaContatto(c, true)).join("") +
-    VIAGGIO.contatti.map(c => rigaContatto(c, false)).join("");
+    VIAGGIO.contatti.filter(c => !nascosto("contatti", c.id)).map(c => rigaContatto(c, false)).join("") +
+    rigaRipristino("contatti", eliminati);
   fc.attiva();
   document.querySelectorAll("#pann-contatti [data-del-cont]").forEach(b => b.onclick = () => {
     if(!confirm("Eliminare questo contatto?")) return;
-    const e = extra();
-    e.contatti = e.contatti.filter(x => x.id !== b.dataset.delCont);
-    salvaExtra(e);
+    if(b.dataset.tipo === "mio"){
+      const e = extra();
+      e.contatti = e.contatti.filter(x => x.id !== b.dataset.delCont);
+      salvaExtra(e);
+    } else nascondi("contatti", b.dataset.delCont);
     renderContatti();
   });
+  attivaRipristino("#pann-contatti", renderContatti);
 }
 
 /* ---- salvati (link da TikTok / Instagram / web) ---- */
