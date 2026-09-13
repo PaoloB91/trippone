@@ -4,7 +4,7 @@
 // dentro una versione non cambiano, e a ogni deploy la versione ruota e la cache riparte.
 // NON aggiornare CACHE_VERSION a mano: lo fa deploy.sh.
 
-const CACHE_VERSION = "trippone-v17";
+const CACHE_VERSION = "trippone-v18";
 const FILE = [
   "./",
   "./index.html",
